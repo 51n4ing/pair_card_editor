@@ -1,0 +1,1064 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Noto Sans KR',sans-serif}
+.wrap{display:flex;height:100vh;min-height:800px;font-size:13px}
+.editor{width:300px;min-width:300px;background:var(--color-background-secondary);border-right:0.5px solid var(--color-border-tertiary);overflow-y:auto;display:flex;flex-direction:column}
+.editor-top{flex-shrink:0}
+.section-tab{display:grid;grid-template-columns:repeat(3,1fr);border-bottom:0.5px solid var(--color-border-tertiary)}
+.section-tab button{padding:7px 2px;font-size:10px;border:none;background:transparent;cursor:pointer;color:var(--color-text-secondary);border-bottom:2px solid transparent;font-family:inherit;line-height:1.3}
+.section-tab button.active{color:var(--color-text-primary);border-bottom:2px solid var(--color-text-primary);font-weight:500}
+.editor-actions{display:flex;gap:5px;padding:8px 14px;border-bottom:0.5px solid var(--color-border-tertiary)}
+.editor-actions button{flex:1;padding:6px 2px;font-size:10px;border:1px solid #d0d0d0;border-radius:6px;cursor:pointer;background:var(--color-background-primary);color:var(--color-text-primary);font-family:inherit}
+.editor-actions button:hover{background:var(--color-background-secondary)}
+.editor-actions button.primary{background:var(--color-text-primary);color:var(--color-background-primary);border-color:var(--color-text-primary)}
+.file-actions{display:flex;gap:6px;padding:7px 14px;border-bottom:0.5px solid var(--color-border-tertiary)}
+.file-actions button{flex:1;padding:6px 4px;font-size:10px;border:1px solid #d0d0d0;border-radius:6px;cursor:pointer;background:var(--color-background-primary);color:var(--color-text-primary);font-family:inherit;display:flex;align-items:center;justify-content:center;gap:3px}
+.file-actions button:hover{background:var(--color-background-secondary)}
+.file-actions button.export-btn{border-color:#4488ff;color:#4488ff}
+.file-actions button.export-btn:hover{background:#f0f5ff}
+.file-actions button.import-btn{border-color:#44aa88;color:#44aa88}
+.file-actions button.import-btn:hover{background:#f0fff8}
+.file-actions-label{font-size:9px;color:var(--color-text-secondary);text-align:center;padding:0 14px 5px;border-bottom:0.5px solid var(--color-border-tertiary)}
+.panel{display:none;padding:14px;overflow-y:auto}
+.panel.active{display:block}
+.field-label{font-size:11px;color:var(--color-text-secondary);margin-bottom:4px;margin-top:12px}
+.field-label:first-child{margin-top:0}
+input[type=text],input[type=number],textarea,select{width:100%;padding:6px 8px;border:0.5px solid var(--color-border-secondary);border-radius:6px;font-size:12px;background:var(--color-background-primary);color:var(--color-text-primary);font-family:inherit}
+textarea{resize:none;overflow:hidden}
+input[type=color]{width:100%;height:30px;padding:2px;border:1px solid #d0d0d0;border-radius:6px;cursor:pointer}
+.img-upload{display:block;border:1px dashed #c0c0c0;border-radius:8px;padding:8px;text-align:center;cursor:pointer;background:var(--color-background-primary);color:var(--color-text-secondary);font-size:11px}
+.img-upload input[type=file]{display:none}
+.stat-row{display:grid;grid-template-columns:1fr 60px;gap:6px;margin-bottom:6px;align-items:center}
+.desc-item{border:1px solid #e0e0e0;border-radius:6px;padding:8px;margin-bottom:8px;background:var(--color-background-primary)}
+.desc-item textarea{border:none;padding:0;font-size:12px;background:transparent}
+.btn-del{font-size:11px;padding:4px 10px;border:1px solid #f0b0b0;border-radius:4px;cursor:pointer;background:var(--color-background-primary);color:#e55;font-family:inherit}
+.btn-del:hover{background:#fff0f0}
+.btn-add{width:100%;padding:7px;border:1px dashed #c0c0c0;border-radius:6px;background:transparent;color:var(--color-text-secondary);cursor:pointer;font-size:12px;font-family:inherit;margin-top:4px}
+.btn-add:hover{background:var(--color-background-secondary)}
+.tl-item,.msg-item{border:1px solid #e8e8e8;border-radius:6px;padding:8px;margin-bottom:8px;background:var(--color-background-primary)}
+.side-btns{display:flex;gap:4px;margin-bottom:6px}
+.side-btns button{flex:1;padding:4px;font-size:11px;border:1px solid #d0d0d0;border-radius:4px;cursor:pointer;background:transparent;color:var(--color-text-secondary);font-family:inherit}
+.side-btns button.active{background:var(--color-text-primary);color:var(--color-background-primary);border-color:var(--color-text-primary)}
+.divider{border:none;border-top:0.5px solid var(--color-border-tertiary);margin:12px 0}
+.char-tab{display:flex;gap:6px;margin-bottom:12px}
+.char-tab button{flex:1;padding:6px;font-size:12px;border:1px solid #d0d0d0;border-radius:6px;cursor:pointer;background:transparent;color:var(--color-text-secondary);font-family:inherit}
+.char-tab button.active{background:var(--color-text-primary);color:var(--color-background-primary);border-color:var(--color-text-primary)}
+.avatar-tab{display:flex;gap:4px;margin-bottom:12px;border-bottom:1px solid #e8e8e8}
+.avatar-tab button{flex:1;padding:7px 4px;font-size:11px;border:1px solid #d0d0d0;border-radius:6px 6px 0 0;cursor:pointer;background:transparent;color:var(--color-text-secondary);font-family:inherit;border-bottom:none;margin-bottom:-1px}
+.avatar-tab button.active{background:var(--color-background-primary);color:var(--color-text-primary);font-weight:500;border-bottom:1px solid var(--color-background-primary)}
+.avatar-panel{display:none}.avatar-panel.active{display:block}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.toggle-row span{font-size:12px;color:var(--color-text-primary)}
+.toggle{position:relative;width:40px;height:22px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;inset:0;background:#ccc;border-radius:11px;cursor:pointer;transition:.2s}
+.toggle-slider:before{content:'';position:absolute;width:16px;height:16px;left:3px;top:3px;background:white;border-radius:50%;transition:.2s}
+.toggle input:checked+.toggle-slider{background:#4488ff}
+.toggle input:checked+.toggle-slider:before{transform:translateX(18px)}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#333;color:white;padding:8px 16px;border-radius:20px;font-size:12px;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none}
+.toast.show{opacity:1}
+.sticker-item{border:1px solid #e8e8e8;border-radius:6px;padding:8px;margin-bottom:8px;background:var(--color-background-primary)}
+.ctx-menu{position:absolute;background:white;border:1px solid #ddd;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.15);z-index:9000;min-width:160px;overflow:hidden;display:none}
+.ctx-menu.show{display:block}
+.ctx-menu-title{padding:6px 12px;font-size:10px;color:#999;border-bottom:0.5px solid #eee}
+.ctx-menu-item{padding:8px 12px;font-size:12px;cursor:pointer}
+.ctx-menu-item:hover{background:#f5f5f5}
+.ctx-menu-item.active{background:#f0f0f0;font-weight:500}
+.ctx-menu-sep{height:0.5px;background:#eee;margin:4px 0}
+.ctrl-row{display:flex;align-items:center;gap:4px;margin-bottom:2px}
+.ctrl-row input[type=range]{flex:1;margin:0}
+.ctrl-btn{width:24px;height:24px;border:1px solid #d0d0d0;border-radius:4px;background:var(--color-background-primary);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--color-text-primary);line-height:1;padding:0}
+.ctrl-btn:hover{background:var(--color-background-secondary)}
+.ctrl-val{font-size:10px;color:var(--color-text-secondary);min-width:32px;text-align:right}
+.d-block-item{border:1px solid #e0e0e0;border-radius:8px;padding:8px;margin-bottom:8px;background:var(--color-background-primary)}
+.ratio-btns{display:flex;gap:6px;margin-top:6px}
+.ratio-btn{flex:1;padding:8px 4px;border:1px solid #d0d0d0;border-radius:6px;cursor:pointer;background:var(--color-background-primary);color:var(--color-text-secondary);font-family:inherit;font-size:11px;display:flex;flex-direction:column;align-items:center;gap:4px}
+.ratio-btn:hover{background:var(--color-background-secondary)}
+.ratio-btn.active{border-color:#4488ff;color:#4488ff;background:#f0f5ff}
+.ratio-thumb{border:1.5px solid currentColor;border-radius:2px;background:currentColor;opacity:.2}
+.ratio-thumb.square{width:28px;height:28px}
+.ratio-thumb.portrait{width:22px;height:34px}
+.sticker-el{position:absolute;cursor:move;user-select:none;transform-origin:center center}
+.sticker-el img{display:block;pointer-events:none}
+.sticker-sel-box{position:absolute;top:0;left:0;pointer-events:none;border:1.5px dashed #4488ff;display:none}
+.sticker-handle{position:absolute;width:12px;height:12px;background:white;border:1.5px solid #4488ff;border-radius:50%;z-index:10;display:none}
+.sticker-handle.br{cursor:nwse-resize;pointer-events:all;bottom:-6px;right:-6px}
+.sticker-handle.rot{cursor:crosshair;background:#4488ff;pointer-events:all;top:-24px;left:50%;transform:translateX(-50%)}
+.preview{flex:1;overflow:auto;display:flex;align-items:flex-start;justify-content:center;padding:60px 80px;transition:background .2s}
+.canvas-container{position:relative;display:inline-block}
+.canvas{width:960px;display:grid;grid-template-columns:240px 1fr 1fr 280px;grid-template-rows:auto auto 1fr;gap:6px}
+.sticker-layer{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:100;overflow:visible}
+.sticker-layer .sticker-el{pointer-events:all}
+.sec-c1{grid-column:1;grid-row:1;background:white;border-radius:8px;padding:12px;overflow:hidden}
+.c1-title{font-size:15px;font-weight:700;margin-bottom:4px}
+.c1-sub{font-size:11px;color:#666;line-height:1.7;white-space:pre-wrap}
+.sec-a{grid-column:2/4;grid-row:1;border-radius:8px;overflow:hidden;background:#f5f5f5;position:relative;min-height:120px}
+.sec-a .img-clip{position:absolute;inset:0;overflow:hidden}
+.sec-a img{position:absolute;top:50%;left:50%;max-width:none;max-height:none}
+.sec-a .placeholder{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#bbb;font-size:13px;flex-direction:column;gap:6px}
+.sec-d{grid-column:4;grid-row:1;background:transparent;border-radius:8px;overflow:hidden;display:flex;flex-direction:column;gap:0}
+.sec-d.hidden{display:none}
+.d-block{width:100%;flex-shrink:0}
+.d-block:first-child{border-radius:8px 8px 0 0}
+.d-block:last-child{border-radius:0 0 8px 8px}
+.d-block:only-child{border-radius:8px}
+.d-block-song{background:white;padding:12px}
+.d-song-top{display:flex;align-items:center;gap:10px;margin-bottom:0}
+.d-album{width:52px;height:52px;border-radius:50%;background:#eee;overflow:hidden;flex-shrink:0;position:relative}
+.d-album img{position:absolute;top:50%;left:50%;max-width:none;max-height:none}
+.d-album .ph{display:flex;align-items:center;justify-content:center;width:100%;height:100%;color:#ccc;font-size:9px}
+.d-info{flex:1;min-width:0}
+.d-title{font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.d-artist{font-size:10px;color:#888}
+.d-lyrics{font-size:10px;color:#666;line-height:1.7;border-top:0.5px solid #f0f0f0;margin-top:8px;padding-top:6px;white-space:pre-wrap;word-break:break-all}
+.d-block-date{background:white;padding:10px 12px;display:flex;align-items:center;gap:8px}
+.d-date-icon{font-size:16px;flex-shrink:0}
+.d-date-info{flex:1;min-width:0}
+.d-date-label{font-size:9px;color:#aaa}
+.d-date-value{font-size:13px;font-weight:700;color:#333}
+.d-block-color{min-height:40px;position:relative}
+.d-block-color-label{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;mix-blend-mode:multiply;opacity:.6;color:#333}
+.sec-c2{grid-column:1;grid-row:2/4;background:white;border-radius:8px;overflow:hidden;display:flex;flex-direction:column}
+.sec-c2-header{padding:8px 10px;border-bottom:0.5px solid #f0f0f0;font-size:12px;font-weight:500;color:#555;flex-shrink:0}
+.chat-body{flex:1;overflow-y:auto;padding:10px 8px;display:flex;flex-direction:column;gap:8px;background:#f7f7f7}
+.bubble-row{display:flex;align-items:flex-end;gap:6px}
+.bubble-row.right{flex-direction:row-reverse}
+.bubble-avatar{width:26px;height:26px;border-radius:50%;overflow:hidden;flex-shrink:0;position:relative;background:#ddd}
+.bubble{max-width:140px;padding:6px 10px;border-radius:14px;font-size:11px;line-height:1.5;word-break:break-all}
+.bubble-row.left .bubble{border-top-left-radius:4px}
+.bubble-row.right .bubble{border-top-right-radius:4px}
+.sec-b{grid-row:2/4;background:white;border-radius:8px;overflow:hidden}
+.sec-b-header{display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:0.5px solid #f0f0f0}
+.theme-bar{width:4px;height:20px;border-radius:2px;flex-shrink:0}
+.b-name{font-weight:500;font-size:13px;flex:1}
+.b-sub{font-size:10px;color:#888;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sec-b-img{background:#f5f5f5;position:relative;overflow:hidden;border-bottom:0.5px solid #f0f0f0;transition:height .2s}
+.sec-b-img img{position:absolute;top:50%;left:50%;max-width:none;max-height:none}
+.sec-b-img .placeholder{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#ccc}
+.keywords{display:flex;gap:4px;padding:6px 10px;flex-wrap:wrap;border-bottom:0.5px solid #f0f0f0}
+.kw-chip{border-radius:12px;padding:2px 8px;font-size:10px;white-space:nowrap}
+.stats-section{padding:6px 10px;border-bottom:0.5px solid #f0f0f0;display:flex;gap:8px;align-items:center}
+.radar-wrap{width:64px;height:64px;flex-shrink:0}
+.stats-list{flex:1;font-size:10px}
+.stat-line{display:flex;justify-content:space-between;padding:1px 0;color:#555}
+.stat-val{font-weight:500}
+.desc-section{padding:6px 10px;font-size:10px;color:#444;line-height:1.6}
+.desc-block{margin-bottom:5px;padding-bottom:5px;border-bottom:0.5px solid #f0f0f0}
+.desc-block:last-child{border-bottom:none;margin-bottom:0}
+.desc-title{font-weight:500;font-size:11px;margin-bottom:2px;color:#222}
+.sec-t{background:white;border-radius:8px;overflow:hidden;display:flex;flex-direction:column}
+.sec-t.d-on{grid-column:4;grid-row:2/4}
+.sec-t.d-off{grid-column:4;grid-row:1/4}
+.t-header{padding:10px 14px;border-bottom:0.5px solid #f0f0f0;flex-shrink:0}
+.t-header-title{font-size:13px;font-weight:700;letter-spacing:0.08em}
+.timeline-body{padding:14px 0;position:relative;overflow-y:auto;flex:1}
+.tl-line{position:absolute;left:50%;top:0;bottom:0;width:1.5px;background:#e0e0e0;transform:translateX(-50%);z-index:0}
+.tl-entry{display:grid;grid-template-columns:1fr 24px 1fr;align-items:center;margin-bottom:18px;position:relative;z-index:1}
+.tl-dot-cell{display:flex;align-items:center;justify-content:center;position:relative;z-index:2}
+.tl-dot{border-radius:50%;flex-shrink:0}
+.tl-dot.sm{width:8px;height:8px}.tl-dot.md{width:12px;height:12px}.tl-dot.lg{width:18px;height:18px}
+.tl-left{padding:0 4px 0 4px;text-align:right}
+.tl-right{padding:0 4px 0 4px;text-align:left}
+.tl-entry.center{display:flex;flex-direction:column;align-items:center;margin-bottom:14px}
+.tl-entry.center .tl-dot-cell{margin-bottom:5px}
+.tl-center-text{text-align:center;background:white;padding:3px 8px;position:relative;z-index:2}
+.tl-head{font-size:10px;font-weight:500;color:#333}
+.tl-body{font-size:9px;color:#888;line-height:1.4;margin-top:2px}
+</style>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<div class="toast" id="toast"></div>
+<div class="ctx-menu" id="ctxMenu">
+  <div class="ctx-menu-title">꾸밈 효과</div>
+  <div class="ctx-menu-item" data-style="none">없음</div>
+  <div class="ctx-menu-item" data-style="white">흰 테두리 (선명)</div>
+  <div class="ctx-menu-item" data-style="whiteSoft">흰 글로우</div>
+  <div class="ctx-menu-item" data-style="shadow">그림자</div>
+  <div class="ctx-menu-item" data-style="darkGlow">검은 글로우</div>
+  <div class="ctx-menu-sep"></div>
+  <div class="ctx-menu-item" id="ctxDelete" style="color:#e55">삭제</div>
+</div>
+<input type="file" id="importFileInput" accept=".json" style="display:none" onchange="importFromFile(this)">
+
+<div class="wrap">
+  <div class="editor">
+    <div class="editor-top">
+      <div class="section-tab">
+        <button class="active" onclick="switchTab('a')">배너</button>
+        <button onclick="switchTab('b')">캐릭터</button>
+        <button onclick="switchTab('c1')">세계관/서사</button>
+        <button onclick="switchTab('c2')">대화</button>
+        <button onclick="switchTab('d')">테마곡</button>
+        <button onclick="switchTab('t')">타임라인</button>
+      </div>
+      <div style="border-bottom:0.5px solid var(--color-border-tertiary)">
+        <button onclick="switchTab('sticker')" id="tab-sticker" style="width:100%;padding:7px;font-size:10px;border:none;background:transparent;cursor:pointer;color:var(--color-text-secondary);font-family:inherit;border-bottom:2px solid transparent">🖼 스티커</button>
+      </div>
+      <div class="editor-actions">
+        <button onclick="saveData()">임시저장</button>
+        <button onclick="loadData()">불러오기</button>
+        <button class="primary" onclick="saveImage()">이미지 저장</button>
+      </div>
+      <div class="file-actions">
+        <button class="export-btn" onclick="exportToFile()"><i class="ti ti-download" style="font-size:12px" aria-hidden="true"></i> 파일 내보내기</button>
+        <button class="import-btn" onclick="document.getElementById('importFileInput').click()"><i class="ti ti-upload" style="font-size:12px" aria-hidden="true"></i> 파일 가져오기</button>
+      </div>
+      <div class="file-actions-label">파일로 저장하면 어느 컴퓨터에서도 불러올 수 있어요</div>
+    </div>
+
+    <div class="panel active" id="panel-a">
+      <div class="field-label">배경 색상</div><input type="color" id="bgColor" value="#e8e5e0" oninput="updateBgColor()">
+      <hr class="divider">
+      <div class="field-label">배너 이미지</div>
+      <label class="img-upload" for="aImg"><input type="file" id="aImg" accept="image/*" onchange="loadImg(this,'a')"><i class="ti ti-photo" style="font-size:18px;margin-bottom:3px;display:block" aria-hidden="true"></i>이미지 업로드</label>
+      <div class="field-label">가로 위치</div>
+      <div class="ctrl-row"><button class="ctrl-btn" onclick="stepCtrl('aX',-10,()=>updateImgPos('a'))">−</button><input type="range" min="-1000" max="1000" value="0" id="aX" oninput="updateImgPos('a')"><button class="ctrl-btn" onclick="stepCtrl('aX',10,()=>updateImgPos('a'))">+</button><span class="ctrl-val" id="aXv">0</span></div>
+      <div class="field-label">세로 위치</div>
+      <div class="ctrl-row"><button class="ctrl-btn" onclick="stepCtrl('aY',-10,()=>updateImgPos('a'))">−</button><input type="range" min="-1000" max="1000" value="0" id="aY" oninput="updateImgPos('a')"><button class="ctrl-btn" onclick="stepCtrl('aY',10,()=>updateImgPos('a'))">+</button><span class="ctrl-val" id="aYv">0</span></div>
+      <div class="field-label">크기</div>
+      <div class="ctrl-row"><button class="ctrl-btn" onclick="stepCtrl('aScale',-5,()=>updateImgPos('a'))">−</button><input type="range" min="5" max="500" value="100" id="aScale" oninput="updateImgPos('a')"><button class="ctrl-btn" onclick="stepCtrl('aScale',5,()=>updateImgPos('a'))">+</button><span class="ctrl-val" id="aScalev">100</span></div>
+      <div class="field-label">회전</div>
+      <div class="ctrl-row"><button class="ctrl-btn" onclick="stepCtrl('aRot',-5,()=>updateImgPos('a'))">−</button><input type="range" min="-180" max="180" value="0" id="aRot" oninput="updateImgPos('a')"><button class="ctrl-btn" onclick="stepCtrl('aRot',5,()=>updateImgPos('a'))">+</button><span class="ctrl-val" id="aRotv">0</span></div>
+    </div>
+
+    <div class="panel" id="panel-b">
+      <div class="char-tab">
+        <button class="active" onclick="switchChar('b1',this)">캐릭터 A</button>
+        <button onclick="switchChar('b2',this)">캐릭터 B</button>
+      </div>
+      <div id="char-b1">
+        <div class="field-label">테마 색상</div><input type="color" id="b1color" value="#4488ff" oninput="updateChar('b1')">
+        <div class="field-label">이름</div><input type="text" id="b1name" value="캐릭터 이름" oninput="updateChar('b1')">
+        <div class="field-label">우측 자유 텍스트</div><input type="text" id="b1sub" value="자유롭게 입력하세요" oninput="updateChar('b1')">
+        <div class="field-label">캐릭터 이미지</div>
+        <label class="img-upload" for="b1Img"><input type="file" id="b1Img" accept="image/*" onchange="loadImg(this,'b1')"><i class="ti ti-user" style="font-size:16px;margin-bottom:2px;display:block" aria-hidden="true"></i>이미지 업로드</label>
+        <div class="field-label">이미지 칸 비율</div>
+        <div class="ratio-btns">
+          <button class="ratio-btn active" id="b1ratio-square" onclick="setImgRatio('b1','square',this)"><div class="ratio-thumb square"></div>정사각형</button>
+          <button class="ratio-btn" id="b1ratio-portrait" onclick="setImgRatio('b1','portrait',this)"><div class="ratio-thumb portrait"></div>세로형</button>
+        </div>
+        <div class="field-label">가로</div>
+        <div class="ctrl-row"><button class="ctrl-btn" onclick="stepCtrl('b1X',-10,()=>updateImgPos('b1'))">−</button><input type="range" min="-1000" max="1000" value="0" id="b1X" oninput="updateImgPos('b1')"><button class="ctrl-btn" onclick="stepCtrl('b1X',10,()=>updateImgPos('b1'))">+</button><span class="ctrl-val" id="b1Xv">0</span></div>
+        <div class="field-label">세로</div>
+        <div class="ctrl-row"><button class="ctrl-btn" onclick="stepCtrl('b1Y',-10,()=>updateImgPos('b1'))">−</button><input type="range" min="-1000" max="1000" value="0" id="b1Y" oninput="updateImgPos('b1')"><button class="ctrl-btn" onclick="stepCtrl('b1Y',10,()=>updateImgPos('b1'))">+</button><span class="ctrl-val" id="b1Yv">0</span></div>
+        <div class="field-label">크기</div>
+        <div class="ctrl-row"><button class="ctrl-btn" onclick="stepCtrl('b1Scale',-5,()=>updateImgPos('b1'))">−</button><input type="range" min="5" max="500" value="100" id="b1Scale" oninput="updateImgPos('b1')"><button class="ctrl-btn" onclick="stepCtrl('b1Scale',5,()=>updateImgPos('b1'))">+</button><span class="ctrl-val" id="b1Scalev">100</span></div>
+        <div class="field-label">회전</div>
+        <div class="ctrl-row"><button class="ctrl-btn" onclick="stepCtrl('b1Rot',-5,()=>updateImgPos('b1'))">−</button><input type="range" min="-180" max="180" value="0" id="b1Rot" oninput="updateImgPos('b1')"><button class="ctrl-btn" onclick="stepCtrl('b1Rot',5,()=>updateImgPos('b1'))">+</button><span class="ctrl-val" id="b1Rotv">0</span></div>
+        <hr class="divider">
+        <div class="field-label">키워드</div>
+        <input type="text" id="b1kw1" value="키워드1" oninput="updateChar('b1')" style="margin-bottom:5px">
+        <input type="text" id="b1kw2" value="키워드2" oninput="updateChar('b1')" style="margin-bottom:5px">
+        <input type="text" id="b1kw3" value="키워드3" oninput="updateChar('b1')">
+        <hr class="divider">
+        <div class="field-label">특성치</div>
+        <div id="b1stats">
+          <div class="stat-row"><input type="text" value="힘" oninput="updateChar('b1')"><input type="number" min="0" max="100" value="70" oninput="updateChar('b1')"></div>
+          <div class="stat-row"><input type="text" value="지능" oninput="updateChar('b1')"><input type="number" min="0" max="100" value="60" oninput="updateChar('b1')"></div>
+          <div class="stat-row"><input type="text" value="민첩" oninput="updateChar('b1')"><input type="number" min="0" max="100" value="85" oninput="updateChar('b1')"></div>
+          <div class="stat-row"><input type="text" value="카리스마" oninput="updateChar('b1')"><input type="number" min="0" max="100" value="50" oninput="updateChar('b1')"></div>
+          <div class="stat-row"><input type="text" value="체력" oninput="updateChar('b1')"><input type="number" min="0" max="100" value="90" oninput="updateChar('b1')"></div>
+        </div>
+        <hr class="divider">
+        <div class="field-label">설명 블록</div>
+        <div id="b1descs"><div class="desc-item"><input type="text" placeholder="제목" value="소개" oninput="updateChar('b1')" style="margin-bottom:5px"><textarea placeholder="내용" oninput="updateChar('b1');autoResize(this)">캐릭터 설명을 입력하세요.</textarea><button class="btn-del" style="margin-top:4px" onclick="removeDesc(this,'b1')">삭제</button></div></div>
+        <button class="btn-add" onclick="addDesc('b1')">+ 설명 블록 추가</button>
+      </div>
+      <div id="char-b2" style="display:none">
+        <div class="field-label">테마 색상</div><input type="color" id="b2color" value="#ff4466" oninput="updateChar('b2')">
+        <div class="field-label">이름</div><input type="text" id="b2name" value="캐릭터 이름" oninput="updateChar('b2')">
+        <div class="field-label">우측 자유 텍스트</div><input type="text" id="b2sub" value="자유롭게 입력하세요" oninput="updateChar('b2')">
+        <div class="field-label">캐릭터 이미지</div>
+        <label class="img-upload" for="b2Img"><input type="file" id="b2Img" accept="image/*" onchange="loadImg(this,'b2')"><i class="ti ti-user" style="font-size:16px;margin-bottom:2px;display:block" aria-hidden="true"></i>이미지 업로드</label>
+        <div class="field-label">이미지 칸 비율</div>
+        <div class="ratio-btns">
+          <button class="ratio-btn active" id="b2ratio-square" onclick="setImgRatio('b2','square',this)"><div class="ratio-thumb square"></div>정사각형</button>
+          <button class="ratio-btn" id="b2ratio-portrait" onclick="setImgRatio('b2','portrait',this)"><div class="ratio-thumb portrait"></div>세로형</button>
+        </div>
+        <div class="field-label">가로</div>
+        <div class="ctrl-row"><button class="ctrl-btn" onclick="stepCtrl('b2X',-10,()=>updateImgPos('b2'))">−</button><input type="range" min="-1000" max="1000" value="0" id="b2X" oninput="updateImgPos('b2')"><button class="ctrl-btn" onclick="stepCtrl('b2X',10,()=>updateImgPos('b2'))">+</button><span class="ctrl-val" id="b2Xv">0</span></div>
+        <div class="field-label">세로</div>
+        <div class="ctrl-row"><button class="ctrl-btn" onclick="stepCtrl('b2Y',-10,()=>updateImgPos('b2'))">−</button><input type="range" min="-1000" max="1000" value="0" id="b2Y" oninput="updateImgPos('b2')"><button class="ctrl-btn" onclick="stepCtrl('b2Y',10,()=>updateImgPos('b2'))">+</button><span class="ctrl-val" id="b2Yv">0</span></div>
+        <div class="field-label">크기</div>
+        <div class="ctrl-row"><button class="ctrl-btn" onclick="stepCtrl('b2Scale',-5,()=>updateImgPos('b2'))">−</button><input type="range" min="5" max="500" value="100" id="b2Scale" oninput="updateImgPos('b2')"><button class="ctrl-btn" onclick="stepCtrl('b2Scale',5,()=>updateImgPos('b2'))">+</button><span class="ctrl-val" id="b2Scalev">100</span></div>
+        <div class="field-label">회전</div>
+        <div class="ctrl-row"><button class="ctrl-btn" onclick="stepCtrl('b2Rot',-5,()=>updateImgPos('b2'))">−</button><input type="range" min="-180" max="180" value="0" id="b2Rot" oninput="updateImgPos('b2')"><button class="ctrl-btn" onclick="stepCtrl('b2Rot',5,()=>updateImgPos('b2'))">+</button><span class="ctrl-val" id="b2Rotv">0</span></div>
+        <hr class="divider">
+        <div class="field-label">키워드</div>
+        <input type="text" id="b2kw1" value="키워드1" oninput="updateChar('b2')" style="margin-bottom:5px">
+        <input type="text" id="b2kw2" value="키워드2" oninput="updateChar('b2')" style="margin-bottom:5px">
+        <input type="text" id="b2kw3" value="키워드3" oninput="updateChar('b2')">
+        <hr class="divider">
+        <div class="field-label">특성치</div>
+        <div id="b2stats">
+          <div class="stat-row"><input type="text" value="힘" oninput="updateChar('b2')"><input type="number" min="0" max="100" value="40" oninput="updateChar('b2')"></div>
+          <div class="stat-row"><input type="text" value="지능" oninput="updateChar('b2')"><input type="number" min="0" max="100" value="90" oninput="updateChar('b2')"></div>
+          <div class="stat-row"><input type="text" value="민첩" oninput="updateChar('b2')"><input type="number" min="0" max="100" value="55" oninput="updateChar('b2')"></div>
+          <div class="stat-row"><input type="text" value="카리스마" oninput="updateChar('b2')"><input type="number" min="0" max="100" value="80" oninput="updateChar('b2')"></div>
+          <div class="stat-row"><input type="text" value="체력" oninput="updateChar('b2')"><input type="number" min="0" max="100" value="60" oninput="updateChar('b2')"></div>
+        </div>
+        <hr class="divider">
+        <div class="field-label">설명 블록</div>
+        <div id="b2descs"><div class="desc-item"><input type="text" placeholder="제목" value="소개" oninput="updateChar('b2')" style="margin-bottom:5px"><textarea placeholder="내용" oninput="updateChar('b2');autoResize(this)">캐릭터 설명을 입력하세요.</textarea><button class="btn-del" style="margin-top:4px" onclick="removeDesc(this,'b2')">삭제</button></div></div>
+        <button class="btn-add" onclick="addDesc('b2')">+ 설명 블록 추가</button>
+      </div>
+    </div>
+
+    <div class="panel" id="panel-c1">
+      <div class="field-label">제목</div><input type="text" id="c1title" value="자유텍스트" oninput="updateC1()">
+      <div class="field-label">본문</div>
+      <textarea id="c1body" oninput="updateC1();autoResize(this)">텍스트를 자유롭게 입력하세요.</textarea>
+    </div>
+
+    <div class="panel" id="panel-c2">
+      <div style="background:var(--color-background-primary);border-radius:8px;padding:10px;margin-bottom:12px;border:1px solid #e8e8e8">
+        <div style="font-size:11px;font-weight:500;margin-bottom:10px;color:var(--color-text-primary)">아바타 이미지</div>
+        <div class="avatar-tab">
+          <button class="active" onclick="switchAvatarTab('a',this)">A (좌측)</button>
+          <button onclick="switchAvatarTab('b',this)">B (우측)</button>
+        </div>
+        <div class="avatar-panel active" id="avatar-panel-a">
+          <label class="img-upload" for="avatarAImg" style="padding:8px;margin-bottom:8px"><input type="file" id="avatarAImg" accept="image/*" onchange="loadAvatar(this,'a')"><i class="ti ti-user" style="font-size:14px;display:block;margin-bottom:2px" aria-hidden="true"></i>이미지 업로드</label>
+          <div style="text-align:center;margin-bottom:8px"><div style="width:40px;height:40px;display:inline-flex;align-items:center;justify-content:center;border-radius:50%;background:#e8f0ff;overflow:hidden;position:relative;border:1px solid #d0d0d0"><span id="avatarAPlaceholder" style="font-size:9px;color:#4488ff">A</span><img id="avatarAImg_preview" style="display:none;position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover"></div></div>
+          <div class="field-label" style="margin-top:0">크기</div>
+          <div class="ctrl-row"><button class="ctrl-btn" onclick="stepCtrl('avatarAScale',-5,updateChat)">−</button><input type="range" min="5" max="500" value="100" id="avatarAScale" oninput="updateChat()"><button class="ctrl-btn" onclick="stepCtrl('avatarAScale',5,updateChat)">+</button></div>
+          <div class="field-label">가로 위치</div>
+          <div class="ctrl-row"><button class="ctrl-btn" onclick="stepCtrl('avatarAX',-2,updateChat)">−</button><input type="range" min="-100" max="100" value="0" id="avatarAX" oninput="updateChat()"><button class="ctrl-btn" onclick="stepCtrl('avatarAX',2,updateChat)">+</button></div>
+          <div class="field-label">세로 위치</div>
+          <div class="ctrl-row"><button class="ctrl-btn" onclick="stepCtrl('avatarAY',-2,updateChat)">−</button><input type="range" min="-100" max="100" value="0" id="avatarAY" oninput="updateChat()"><button class="ctrl-btn" onclick="stepCtrl('avatarAY',2,updateChat)">+</button></div>
+        </div>
+        <div class="avatar-panel" id="avatar-panel-b">
+          <label class="img-upload" for="avatarBImg" style="padding:8px;margin-bottom:8px"><input type="file" id="avatarBImg" accept="image/*" onchange="loadAvatar(this,'b')"><i class="ti ti-user" style="font-size:14px;display:block;margin-bottom:2px" aria-hidden="true"></i>이미지 업로드</label>
+          <div style="text-align:center;margin-bottom:8px"><div style="width:40px;height:40px;display:inline-flex;align-items:center;justify-content:center;border-radius:50%;background:#ffe8ee;overflow:hidden;position:relative;border:1px solid #d0d0d0"><span id="avatarBPlaceholder" style="font-size:9px;color:#ff4466">B</span><img id="avatarBImg_preview" style="display:none;position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover"></div></div>
+          <div class="field-label" style="margin-top:0">크기</div>
+          <div class="ctrl-row"><button class="ctrl-btn" onclick="stepCtrl('avatarBScale',-5,updateChat)">−</button><input type="range" min="5" max="500" value="100" id="avatarBScale" oninput="updateChat()"><button class="ctrl-btn" onclick="stepCtrl('avatarBScale',5,updateChat)">+</button></div>
+          <div class="field-label">가로 위치</div>
+          <div class="ctrl-row"><button class="ctrl-btn" onclick="stepCtrl('avatarBX',-2,updateChat)">−</button><input type="range" min="-100" max="100" value="0" id="avatarBX" oninput="updateChat()"><button class="ctrl-btn" onclick="stepCtrl('avatarBX',2,updateChat)">+</button></div>
+          <div class="field-label">세로 위치</div>
+          <div class="ctrl-row"><button class="ctrl-btn" onclick="stepCtrl('avatarBY',-2,updateChat)">−</button><input type="range" min="-100" max="100" value="0" id="avatarBY" oninput="updateChat()"><button class="ctrl-btn" onclick="stepCtrl('avatarBY',2,updateChat)">+</button></div>
+        </div>
+      </div>
+      <hr class="divider" style="margin-top:0">
+      <div class="field-label" style="margin-top:0">말풍선 목록</div>
+      <div id="msg-items">
+        <div class="msg-item" data-side="left"><div class="field-label" style="margin-top:0">캐릭터</div><div class="side-btns"><button class="active" onclick="setMsgSide(this,'left')">A (좌)</button><button onclick="setMsgSide(this,'right')">B (우)</button></div><div class="field-label">글씨 색상</div><input type="color" value="#222222" oninput="updateChat()"><div class="field-label">내용</div><textarea oninput="updateChat();autoResize(this)">안녕하세요!</textarea><button class="btn-del" style="margin-top:6px" onclick="removeMsgItem(this)">삭제</button></div>
+        <div class="msg-item" data-side="right"><div class="field-label" style="margin-top:0">캐릭터</div><div class="side-btns"><button onclick="setMsgSide(this,'left')">A (좌)</button><button class="active" onclick="setMsgSide(this,'right')">B (우)</button></div><div class="field-label">글씨 색상</div><input type="color" value="#ffffff" oninput="updateChat()"><div class="field-label">내용</div><textarea oninput="updateChat();autoResize(this)">반가워요~</textarea><button class="btn-del" style="margin-top:6px" onclick="removeMsgItem(this)">삭제</button></div>
+      </div>
+      <button class="btn-add" onclick="addMsgItem()">+ 말풍선 추가</button>
+    </div>
+
+    <div class="panel" id="panel-d">
+      <div class="toggle-row"><span>D섹션 표시</span><label class="toggle"><input type="checkbox" id="dToggle" checked onchange="toggleD()"><span class="toggle-slider"></span></label></div>
+      <div id="panel-d-content">
+        <p style="font-size:11px;color:var(--color-text-secondary);margin-bottom:10px;line-height:1.5">블록을 추가해 D섹션을 자유롭게 구성하세요.</p>
+        <div id="d-block-items"></div>
+        <div style="display:flex;gap:6px;margin-top:4px">
+          <button class="btn-add" style="margin-top:0" onclick="addDBlock('song')">+ 테마곡</button>
+          <button class="btn-add" style="margin-top:0" onclick="addDBlock('date')">+ 성사일</button>
+          <button class="btn-add" style="margin-top:0" onclick="addDBlock('color')">+ 색상칸</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" id="panel-t">
+      <div style="background:var(--color-background-primary);border-radius:8px;padding:10px;margin-bottom:12px;border:1px solid #e8e8e8">
+        <div class="field-label" style="margin-top:0">헤더 텍스트</div>
+        <input type="text" id="tlTitle" value="TIMELINE" oninput="updateTlHeader()">
+        <div class="field-label">글자 색상</div>
+        <input type="color" id="tlColor" value="#222222" oninput="updateTlHeader()">
+      </div>
+      <hr class="divider" style="margin-top:0">
+      <div id="tl-items">
+        <div class="tl-item" data-side="left"><div class="field-label" style="margin-top:0">배치</div><div class="side-btns"><button class="active" onclick="setSide(this,'left')">A측</button><button onclick="setSide(this,'both')">공용</button><button onclick="setSide(this,'right')">B측</button></div><div class="field-label">중요도</div><select oninput="updateTimeline()"><option value="sm">소</option><option value="md" selected>중</option><option value="lg">대</option></select><div class="field-label">제목</div><input type="text" value="첫 만남" oninput="updateTimeline()"><div class="field-label">내용</div><textarea oninput="updateTimeline();autoResize(this)">사건의 내용.</textarea><button class="btn-del" style="margin-top:6px" onclick="removeTlItem(this)">삭제</button></div>
+        <div class="tl-item" data-side="right"><div class="field-label" style="margin-top:0">배치</div><div class="side-btns"><button onclick="setSide(this,'left')">A측</button><button onclick="setSide(this,'both')">공용</button><button class="active" onclick="setSide(this,'right')">B측</button></div><div class="field-label">중요도</div><select oninput="updateTimeline()"><option value="sm">소</option><option value="md" selected>중</option><option value="lg">대</option></select><div class="field-label">제목</div><input type="text" value="결정적 순간" oninput="updateTimeline()"><div class="field-label">내용</div><textarea oninput="updateTimeline();autoResize(this)">중요한 사건.</textarea><button class="btn-del" style="margin-top:6px" onclick="removeTlItem(this)">삭제</button></div>
+      </div>
+      <button class="btn-add" onclick="addTlItem()">+ 항목 추가</button>
+    </div>
+
+    <div class="panel" id="panel-sticker">
+      <p style="font-size:11px;color:var(--color-text-secondary);margin-bottom:10px;line-height:1.5">드래그: 이동 / 우하단 핸들: 크기 / 상단 핸들: 회전 / 우클릭: 효과 선택</p>
+      <label class="img-upload" for="stickerUpload" style="margin-bottom:12px"><input type="file" id="stickerUpload" accept="image/*" onchange="addSticker(this)"><i class="ti ti-sticker" style="font-size:18px;margin-bottom:3px;display:block" aria-hidden="true"></i>스티커 이미지 추가</label>
+      <div id="sticker-list"></div>
+      <div id="no-sticker" style="font-size:11px;color:var(--color-text-secondary);text-align:center;padding:12px 0">추가된 스티커가 없습니다</div>
+    </div>
+  </div>
+
+  <div class="preview" id="previewArea" style="background:#e8e5e0">
+    <div class="canvas-container" id="canvasContainer">
+      <div id="mainCanvas" class="canvas" style="background:#e8e5e0">
+        <div class="sec-c1"><div class="c1-title" id="c1titlePreview">자유텍스트</div><div class="c1-sub" id="c1bodyPreview">텍스트를 자유롭게 입력하세요.</div></div>
+        <div class="sec-a" id="previewA" style="min-height:120px">
+          <div class="img-clip"><div class="placeholder" id="aPlaceholder"><i class="ti ti-photo" style="font-size:24px" aria-hidden="true"></i>배너 이미지</div><img id="aImgPreview" style="display:none"></div>
+        </div>
+        <div class="sec-d" id="previewD"></div>
+        <div class="sec-c2"><div class="sec-c2-header">대화</div><div class="chat-body" id="chatBody"></div></div>
+        <div class="sec-b" id="previewB1">
+          <div class="sec-b-header"><div class="theme-bar" id="b1themeBar" style="background:#4488ff"></div><span class="b-name" id="b1namePreview">캐릭터 이름</span><span class="b-sub" id="b1subPreview">자유롭게 입력하세요</span></div>
+          <div class="sec-b-img" id="b1ImgBox" style="height:180px"><div class="placeholder" id="b1Placeholder"><i class="ti ti-user" style="font-size:22px" aria-hidden="true"></i></div><img id="b1ImgPreview" style="display:none;position:absolute;top:50%;left:50%;max-width:none;max-height:none"></div>
+          <div class="keywords" id="b1keywords"></div>
+          <div class="stats-section"><div class="radar-wrap"><canvas id="radar1" width="64" height="64"></canvas></div><div class="stats-list" id="b1statsList"></div></div>
+          <div class="desc-section" id="b1descPreview"></div>
+        </div>
+        <div class="sec-b" id="previewB2">
+          <div class="sec-b-header"><div class="theme-bar" id="b2themeBar" style="background:#ff4466"></div><span class="b-name" id="b2namePreview">캐릭터 이름</span><span class="b-sub" id="b2subPreview">자유롭게 입력하세요</span></div>
+          <div class="sec-b-img" id="b2ImgBox" style="height:180px"><div class="placeholder" id="b2Placeholder"><i class="ti ti-user" style="font-size:22px" aria-hidden="true"></i></div><img id="b2ImgPreview" style="display:none;position:absolute;top:50%;left:50%;max-width:none;max-height:none"></div>
+          <div class="keywords" id="b2keywords"></div>
+          <div class="stats-section"><div class="radar-wrap"><canvas id="radar2" width="64" height="64"></canvas></div><div class="stats-list" id="b2statsList"></div></div>
+          <div class="desc-section" id="b2descPreview"></div>
+        </div>
+        <div class="sec-t d-on" id="secT">
+          <div class="t-header"><div class="t-header-title" id="tlTitlePreview" style="color:#222">TIMELINE</div></div>
+          <div class="timeline-body" id="timelineBody"><div class="tl-line"></div></div>
+        </div>
+      </div>
+      <div class="sticker-layer" id="stickerLayer"></div>
+    </div>
+  </div>
+</div>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script>
+const imgSrcs={a:'',b1:'',b2:'',avatarA:'',avatarB:''};
+let avatarSrcs={a:'',b:''};
+let dBlocks=[], dBlockCounter=0;
+const IMG_BOX_H={square:180, portrait:260};
+const imgRatio={b1:'square', b2:'square'};
+
+function autoResize(el){el.style.height='auto';el.style.height=el.scrollHeight+'px';}
+function initAllTextareas(){document.querySelectorAll('textarea').forEach(t=>autoResize(t));}
+
+function setImgRatio(ch,ratio,btn){
+  imgRatio[ch]=ratio;
+  document.querySelectorAll(`#char-${ch} .ratio-btn`).forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById(ch+'ImgBox').style.height=IMG_BOX_H[ratio]+'px';
+}
+
+function switchTab(t){
+  const tabs=['a','b','c1','c2','d','t','sticker'];
+  document.querySelectorAll('.section-tab button').forEach((b,i)=>b.classList.toggle('active',tabs[i]===t));
+  const st=document.getElementById('tab-sticker');
+  if(st) st.style.borderBottomColor=t==='sticker'?'var(--color-text-primary)':'transparent';
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('panel-'+t).classList.add('active');
+  setTimeout(()=>document.getElementById('panel-'+t).querySelectorAll('textarea').forEach(ta=>autoResize(ta)),10);
+}
+function switchChar(id,btn){
+  ['b1','b2'].forEach(c=>document.getElementById('char-'+c).style.display='none');
+  document.getElementById('char-'+id).style.display='block';
+  document.querySelectorAll('.char-tab button').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  setTimeout(()=>document.getElementById('char-'+id).querySelectorAll('textarea').forEach(t=>autoResize(t)),10);
+}
+function switchAvatarTab(side,btn){
+  document.querySelectorAll('.avatar-tab button').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.avatar-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('avatar-panel-'+side).classList.add('active');
+}
+function showToast(msg,dur=2500){
+  const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),dur);
+}
+function updateBgColor(){
+  const c=document.getElementById('bgColor').value;
+  document.getElementById('previewArea').style.background=c;
+  document.getElementById('mainCanvas').style.background=c;
+}
+function toggleD(){
+  const on=document.getElementById('dToggle').checked;
+  document.getElementById('previewD').classList.toggle('hidden',!on);
+  document.getElementById('secT').className='sec-t '+(on?'d-on':'d-off');
+  document.getElementById('panel-d-content').style.opacity=on?'1':'0.4';
+  document.getElementById('panel-d-content').style.pointerEvents=on?'auto':'none';
+}
+function stepCtrl(id,delta,callback){
+  const el=document.getElementById(id); if(!el) return;
+  const min=parseFloat(el.min||'-Infinity'),max=parseFloat(el.max||'Infinity');
+  el.value=Math.min(max,Math.max(min,parseFloat(el.value)+delta));
+  const valEl=document.getElementById(id+'v'); if(valEl) valEl.textContent=el.value;
+  if(callback) callback();
+}
+function loadImg(input,target){
+  const file=input.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>applyImgSrc(target,e.target.result);
+  reader.readAsDataURL(file);
+}
+function applyImgSrc(target,src){
+  imgSrcs[target]=src;
+  if(target==='a'){
+    document.getElementById('aPlaceholder').style.display='none';
+    const img=document.getElementById('aImgPreview'); img.src=src; img.style.display='block'; updateImgPos('a');
+  } else {
+    document.getElementById(target+'Placeholder').style.display='none';
+    const img=document.getElementById(target+'ImgPreview'); img.src=src; img.style.display='block'; updateImgPos(target);
+  }
+}
+function updateImgPos(t){
+  const syncVal=id=>{const el=document.getElementById(id),v=document.getElementById(id+'v');if(el&&v)v.textContent=el.value;};
+  if(t==='a'){
+    ['aX','aY','aScale','aRot'].forEach(syncVal);
+    const x=+document.getElementById('aX').value,y=+document.getElementById('aY').value,s=+document.getElementById('aScale').value,r=+document.getElementById('aRot').value;
+    document.getElementById('aImgPreview').style.transform=`translate(calc(-50% + ${x}px),calc(-50% + ${y}px)) scale(${s/100}) rotate(${r}deg)`;
+  } else {
+    [t+'X',t+'Y',t+'Scale',t+'Rot'].forEach(syncVal);
+    const x=+document.getElementById(t+'X').value,y=+document.getElementById(t+'Y').value,s=+document.getElementById(t+'Scale').value,r=+document.getElementById(t+'Rot').value;
+    document.getElementById(t+'ImgPreview').style.transform=`translate(calc(-50% + ${x}px),calc(-50% + ${y}px)) scale(${s/100}) rotate(${r}deg)`;
+  }
+}
+function hexToRgba(hex,a){
+  const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+  return `rgba(${r},${g},${b},${a})`;
+}
+function updateC1(){
+  document.getElementById('c1titlePreview').textContent=document.getElementById('c1title').value;
+  document.getElementById('c1bodyPreview').textContent=document.getElementById('c1body').value;
+}
+function updateTlHeader(){
+  const el=document.getElementById('tlTitlePreview');
+  el.textContent=document.getElementById('tlTitle').value;
+  el.style.color=document.getElementById('tlColor').value;
+}
+function updateChar(ch){
+  const color=document.getElementById(ch+'color').value;
+  document.getElementById(ch+'themeBar').style.background=color;
+  document.getElementById(ch+'namePreview').textContent=document.getElementById(ch+'name').value;
+  document.getElementById(ch+'subPreview').textContent=document.getElementById(ch+'sub').value;
+  const kws=[1,2,3].map(i=>document.getElementById(ch+'kw'+i).value).filter(v=>v);
+  document.getElementById(ch+'keywords').innerHTML=kws.map(k=>`<span class="kw-chip" style="background:${hexToRgba(color,0.12)};color:${color}">${k}</span>`).join('');
+  const statRows=document.getElementById(ch+'stats').querySelectorAll('.stat-row');
+  const stats=[];
+  statRows.forEach(row=>{const inputs=row.querySelectorAll('input');stats.push({name:inputs[0].value,val:Math.min(100,Math.max(0,parseInt(inputs[1].value)||0))});});
+  document.getElementById(ch+'statsList').innerHTML=stats.map(s=>`<div class="stat-line"><span>${s.name}</span><span class="stat-val" style="color:${color}">${s.val}</span></div>`).join('');
+  drawRadar(ch==='b1'?'radar1':'radar2',stats,color);
+  const dp=document.getElementById(ch+'descPreview'); dp.innerHTML='';
+  document.getElementById(ch+'descs').querySelectorAll('.desc-item').forEach(item=>{
+    const block=document.createElement('div'); block.className='desc-block';
+    block.innerHTML=`<div class="desc-title">${item.querySelector('input[type=text]').value}</div><div>${item.querySelector('textarea').value}</div>`;
+    dp.appendChild(block);
+  });
+  updateChat();
+}
+function drawRadar(canvasId,stats,color){
+  const canvas=document.getElementById(canvasId); if(!canvas) return;
+  const ctx=canvas.getContext('2d'),sz=canvas.width,cx=sz/2,cy=sz/2,r=sz/2-4,n=stats.length; if(n<3) return;
+  ctx.clearRect(0,0,sz,sz);
+  const angles=stats.map((_,i)=>(-Math.PI/2)+(2*Math.PI*i/n));
+  ctx.strokeStyle='#e0e0e0'; ctx.lineWidth=0.5;
+  [0.25,0.5,0.75,1].forEach(sc=>{ctx.beginPath();angles.forEach((a,i)=>{const x=cx+r*sc*Math.cos(a),y=cy+r*sc*Math.sin(a);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y)});ctx.closePath();ctx.stroke();});
+  angles.forEach(a=>{ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+r*Math.cos(a),cy+r*Math.sin(a));ctx.strokeStyle='#e0e0e0';ctx.stroke();});
+  ctx.beginPath();
+  stats.forEach((s,i)=>{const pct=s.val/100,x=cx+r*pct*Math.cos(angles[i]),y=cy+r*pct*Math.sin(angles[i]);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
+  ctx.closePath(); ctx.fillStyle=hexToRgba(color,0.2); ctx.fill(); ctx.strokeStyle=color; ctx.lineWidth=1.5; ctx.stroke();
+}
+
+/* ── 특성치 수집 헬퍼 ── */
+function collectStats(ch){
+  return Array.from(document.getElementById(ch+'stats').querySelectorAll('.stat-row')).map(row=>{
+    const inputs=row.querySelectorAll('input');
+    return {name:inputs[0].value, val:inputs[1].value};
+  });
+}
+/* ── 특성치 복원 헬퍼 ── */
+function applyStats(ch, stats){
+  const container=document.getElementById(ch+'stats');
+  const rows=container.querySelectorAll('.stat-row');
+  stats.forEach((s,i)=>{
+    if(i<rows.length){
+      const inputs=rows[i].querySelectorAll('input');
+      inputs[0].value=s.name;
+      inputs[1].value=s.val;
+    }
+  });
+  updateChar(ch);
+}
+
+/* ── 설명 블록 수집 헬퍼 ── */
+function collectDescs(ch){
+  return Array.from(document.getElementById(ch+'descs').querySelectorAll('.desc-item')).map(item=>({
+    title: item.querySelector('input[type=text]').value,
+    content: item.querySelector('textarea').value
+  }));
+}
+/* ── 설명 블록 복원 헬퍼 ── */
+function applyDescs(ch, descs){
+  document.getElementById(ch+'descs').innerHTML='';
+  descs.forEach(d=>{
+    const div=document.createElement('div'); div.className='desc-item';
+    div.innerHTML=`<input type="text" placeholder="제목" value="${d.title||''}" oninput="updateChar('${ch}')" style="margin-bottom:5px"><textarea placeholder="내용" oninput="updateChar('${ch}');autoResize(this)">${d.content||''}</textarea><button class="btn-del" style="margin-top:4px" onclick="removeDesc(this,'${ch}')">삭제</button>`;
+    document.getElementById(ch+'descs').appendChild(div);
+    setTimeout(()=>div.querySelectorAll('textarea').forEach(t=>autoResize(t)),10);
+  });
+  updateChar(ch);
+}
+
+function addDesc(ch){
+  const div=document.createElement('div'); div.className='desc-item';
+  div.innerHTML=`<input type="text" placeholder="제목" oninput="updateChar('${ch}')" style="margin-bottom:5px"><textarea placeholder="내용" oninput="updateChar('${ch}');autoResize(this)"></textarea><button class="btn-del" style="margin-top:4px" onclick="removeDesc(this,'${ch}')">삭제</button>`;
+  document.getElementById(ch+'descs').appendChild(div);
+  setTimeout(()=>div.querySelectorAll('textarea').forEach(t=>autoResize(t)),10);
+  updateChar(ch);
+}
+function removeDesc(btn,ch){btn.closest('.desc-item').remove();updateChar(ch);}
+
+function loadAvatar(input,side){
+  const file=input.files[0]; if(!file) return;
+  const reader=new FileReader(); reader.onload=e=>applyAvatarSrc(side,e.target.result); reader.readAsDataURL(file);
+}
+function applyAvatarSrc(side,src){
+  avatarSrcs[side]=src; imgSrcs['avatar'+side.toUpperCase()]=src;
+  document.getElementById('avatar'+side.toUpperCase()+'Placeholder').style.display='none';
+  const img=document.getElementById('avatar'+side.toUpperCase()+'Img_preview');
+  img.src=src; img.style.display='block'; updateChat();
+}
+function setMsgSide(btn,side){
+  btn.closest('.msg-item').querySelectorAll('.side-btns button').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active'); btn.closest('.msg-item').dataset.side=side; updateChat();
+}
+function addMsgItem(){
+  const div=document.createElement('div'); div.className='msg-item'; div.dataset.side='left';
+  div.innerHTML=`<div class="field-label" style="margin-top:0">캐릭터</div><div class="side-btns"><button class="active" onclick="setMsgSide(this,'left')">A (좌)</button><button onclick="setMsgSide(this,'right')">B (우)</button></div><div class="field-label">글씨 색상</div><input type="color" value="#222222" oninput="updateChat()"><div class="field-label">내용</div><textarea oninput="updateChat();autoResize(this)">메시지</textarea><button class="btn-del" style="margin-top:6px" onclick="removeMsgItem(this)">삭제</button>`;
+  document.getElementById('msg-items').appendChild(div);
+  setTimeout(()=>div.querySelectorAll('textarea').forEach(t=>autoResize(t)),10);
+  updateChat();
+}
+function removeMsgItem(btn){btn.closest('.msg-item').remove();updateChat();}
+function updateChat(){
+  const c1=document.getElementById('b1color').value,c2=document.getElementById('b2color').value;
+  const aScale=document.getElementById('avatarAScale').value/100,bScale=document.getElementById('avatarBScale').value/100;
+  const aOffX=parseFloat(document.getElementById('avatarAX').value),aOffY=parseFloat(document.getElementById('avatarAY').value);
+  const bOffX=parseFloat(document.getElementById('avatarBX').value),bOffY=parseFloat(document.getElementById('avatarBY').value);
+  const body=document.getElementById('chatBody'); body.innerHTML='';
+  document.getElementById('msg-items').querySelectorAll('.msg-item').forEach(item=>{
+    const side=item.dataset.side||'left',textColor=item.querySelector('input[type=color]')?.value||'#222',text=item.querySelector('textarea')?.value||'';
+    const bgColor=side==='left'?c1:c2,scale=side==='left'?aScale:bScale,offX=side==='left'?aOffX:bOffX,offY=side==='left'?aOffY:bOffY,src=side==='left'?avatarSrcs.a:avatarSrcs.b;
+    const row=document.createElement('div'); row.className='bubble-row '+(side==='left'?'left':'right');
+    let avatarHTML;
+    if(src){const imgSize=Math.round(100*scale),tx=Math.round((50-imgSize/2)+offX),ty=Math.round((50-imgSize/2)+offY);avatarHTML=`<div class="bubble-avatar" style="background:${bgColor}"><img src="${src}" style="position:absolute;width:${imgSize}%;height:${imgSize}%;object-fit:cover;top:${ty}%;left:${tx}%"></div>`;}
+    else{avatarHTML=`<div class="bubble-avatar" style="background:${bgColor};display:flex;align-items:center;justify-content:center;font-size:9px;color:white">${side==='left'?'A':'B'}</div>`;}
+    row.innerHTML=`${avatarHTML}<div class="bubble" style="background:${bgColor};color:${textColor}">${text.replace(/\n/g,'<br>')}</div>`;
+    body.appendChild(row);
+  });
+}
+function setSide(btn,side){
+  btn.closest('.tl-item').querySelectorAll('.side-btns button').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active'); btn.closest('.tl-item').dataset.side=side; updateTimeline();
+}
+function addTlItem(){
+  const div=document.createElement('div'); div.className='tl-item'; div.dataset.side='left';
+  div.innerHTML=`<div class="field-label" style="margin-top:0">배치</div><div class="side-btns"><button class="active" onclick="setSide(this,'left')">A측</button><button onclick="setSide(this,'both')">공용</button><button onclick="setSide(this,'right')">B측</button></div><div class="field-label">중요도</div><select oninput="updateTimeline()"><option value="sm">소</option><option value="md" selected>중</option><option value="lg">대</option></select><div class="field-label">제목</div><input type="text" value="새 항목" oninput="updateTimeline()"><div class="field-label">내용</div><textarea oninput="updateTimeline();autoResize(this)"></textarea><button class="btn-del" style="margin-top:6px" onclick="removeTlItem(this)">삭제</button>`;
+  document.getElementById('tl-items').appendChild(div);
+  setTimeout(()=>div.querySelectorAll('textarea').forEach(t=>autoResize(t)),10);
+  updateTimeline();
+}
+function removeTlItem(btn){btn.closest('.tl-item').remove();updateTimeline();}
+function updateTimeline(){
+  const c1=document.getElementById('b1color').value,c2=document.getElementById('b2color').value;
+  const body=document.getElementById('timelineBody'); body.innerHTML='<div class="tl-line"></div>';
+  document.getElementById('tl-items').querySelectorAll('.tl-item').forEach(item=>{
+    const side=item.dataset.side||'left',size=item.querySelector('select').value,title=item.querySelectorAll('input[type=text]')[0]?.value||'',content=item.querySelector('textarea')?.value||'';
+    let dotColor='#aaa'; if(side==='left') dotColor=c1; else if(side==='right') dotColor=c2;
+    const entry=document.createElement('div');
+    if(side==='both'){entry.className='tl-entry center';entry.innerHTML=`<div class="tl-dot-cell"><div class="tl-dot ${size}" style="background:${dotColor}"></div></div><div class="tl-center-text"><div class="tl-head">${title}</div><div class="tl-body">${content}</div></div>`;}
+    else{entry.className='tl-entry';entry.innerHTML=side==='left'?`<div class="tl-left"><div class="tl-head">${title}</div><div class="tl-body">${content}</div></div><div class="tl-dot-cell"><div class="tl-dot ${size}" style="background:${dotColor}"></div></div><div class="tl-right"></div>`:`<div class="tl-left"></div><div class="tl-dot-cell"><div class="tl-dot ${size}" style="background:${dotColor}"></div></div><div class="tl-right"><div class="tl-head">${title}</div><div class="tl-body">${content}</div></div>`;}
+    body.appendChild(entry);
+  });
+}
+
+/* D블록 */
+function defaultDBlock(type){
+  const id='db'+(++dBlockCounter);
+  if(type==='song') return {id,type,imgSrc:'',imgX:0,imgY:0,imgS:100,imgR:0,title:'곡 제목',artist:'아티스트명',lyrics:'가사 첫 번째 줄\n가사 두 번째 줄'};
+  if(type==='date') return {id,type,label:'성사일',date:'2025.01.01',emoji:'💕'};
+  if(type==='color') return {id,type,colorA:'#ffb3c1',colorB:'',mode:'solid',height:48,text:'',textColor:'#333333'};
+  return {id,type};
+}
+function addDBlock(type,data=null){
+  const s=data||defaultDBlock(type);
+  if(!data) dBlocks.push(s);
+  renderDBlockEditor(s);
+  renderDPreview();
+}
+function renderDBlockEditor(s){
+  const container=document.getElementById('d-block-items');
+  const wrap=document.createElement('div'); wrap.className='d-block-item'; wrap.id='dbe-'+s.id;
+  let inner='';
+  if(s.type==='song'){
+    inner=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><span style="font-size:11px;font-weight:500;color:var(--color-text-primary)">🎵 테마곡</span><button class="btn-del" onclick="removeDBlock('${s.id}')">삭제</button></div>
+      <div class="field-label" style="margin-top:0">앨범 커버</div>
+      <label class="img-upload" for="dimg-${s.id}" style="padding:7px"><input type="file" id="dimg-${s.id}" accept="image/*" onchange="loadDBlockImg(this,'${s.id}')"><i class="ti ti-music" style="font-size:14px;display:block;margin-bottom:2px" aria-hidden="true"></i>업로드</label>
+      <div class="field-label">가로 위치</div><div class="ctrl-row"><button class="ctrl-btn" onclick="stepDBlock('${s.id}','imgX',-5)">−</button><input type="range" min="-60" max="60" value="${s.imgX}" id="db-${s.id}-imgX" oninput="updateDBlockField('${s.id}','imgX',+this.value)"><button class="ctrl-btn" onclick="stepDBlock('${s.id}','imgX',5)">+</button></div>
+      <div class="field-label">세로 위치</div><div class="ctrl-row"><button class="ctrl-btn" onclick="stepDBlock('${s.id}','imgY',-5)">−</button><input type="range" min="-60" max="60" value="${s.imgY}" id="db-${s.id}-imgY" oninput="updateDBlockField('${s.id}','imgY',+this.value)"><button class="ctrl-btn" onclick="stepDBlock('${s.id}','imgY',5)">+</button></div>
+      <div class="field-label">크기</div><div class="ctrl-row"><button class="ctrl-btn" onclick="stepDBlock('${s.id}','imgS',-5)">−</button><input type="range" min="5" max="500" value="${s.imgS}" id="db-${s.id}-imgS" oninput="updateDBlockField('${s.id}','imgS',+this.value)"><button class="ctrl-btn" onclick="stepDBlock('${s.id}','imgS',5)">+</button></div>
+      <div class="field-label">회전</div><div class="ctrl-row"><button class="ctrl-btn" onclick="stepDBlock('${s.id}','imgR',-5)">−</button><input type="range" min="-180" max="180" value="${s.imgR}" id="db-${s.id}-imgR" oninput="updateDBlockField('${s.id}','imgR',+this.value)"><button class="ctrl-btn" onclick="stepDBlock('${s.id}','imgR',5)">+</button></div>
+      <div class="field-label">곡 제목</div><input type="text" value="${s.title}" oninput="updateDBlockField('${s.id}','title',this.value)">
+      <div class="field-label">아티스트</div><input type="text" value="${s.artist}" oninput="updateDBlockField('${s.id}','artist',this.value)">
+      <div class="field-label">가사</div><textarea oninput="updateDBlockField('${s.id}','lyrics',this.value);autoResize(this)">${s.lyrics}</textarea>`;
+  } else if(s.type==='date'){
+    inner=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><span style="font-size:11px;font-weight:500;color:var(--color-text-primary)">📅 성사일</span><button class="btn-del" onclick="removeDBlock('${s.id}')">삭제</button></div>
+      <div class="field-label" style="margin-top:0">이모지</div><input type="text" value="${s.emoji}" maxlength="2" oninput="updateDBlockField('${s.id}','emoji',this.value)" style="font-size:18px;text-align:center">
+      <div class="field-label">라벨</div><input type="text" value="${s.label}" oninput="updateDBlockField('${s.id}','label',this.value)">
+      <div class="field-label">날짜</div><input type="text" value="${s.date}" placeholder="2025.01.01" oninput="updateDBlockField('${s.id}','date',this.value)">`;
+  } else if(s.type==='color'){
+    const isGrad=s.mode==='gradient';
+    inner=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><span style="font-size:11px;font-weight:500;color:var(--color-text-primary)">🎨 색상칸</span><button class="btn-del" onclick="removeDBlock('${s.id}')">삭제</button></div>
+      <div class="field-label" style="margin-top:0">모드</div><div class="side-btns" style="margin-bottom:8px"><button class="${!isGrad?'active':''}" onclick="setDBlockColorMode('${s.id}','solid',this)">단색</button><button class="${isGrad?'active':''}" onclick="setDBlockColorMode('${s.id}','gradient',this)">그라데이션</button></div>
+      <div class="field-label">색상 A</div><input type="color" value="${s.colorA}" oninput="updateDBlockField('${s.id}','colorA',this.value)">
+      <div id="db-${s.id}-colorB-wrap" style="${isGrad?'':'display:none'}"><div class="field-label">색상 B</div><input type="color" value="${s.colorB||'#c9b8ff'}" oninput="updateDBlockField('${s.id}','colorB',this.value)"></div>
+      <div class="field-label">높이 (px)</div><div class="ctrl-row"><button class="ctrl-btn" onclick="stepDBlock('${s.id}','height',-4)">−</button><input type="range" min="20" max="200" value="${s.height}" id="db-${s.id}-height" oninput="updateDBlockField('${s.id}','height',+this.value)"><button class="ctrl-btn" onclick="stepDBlock('${s.id}','height',4)">+</button></div>
+      <div class="field-label">텍스트 (선택)</div><input type="text" value="${s.text||''}" placeholder="빈칸으로 두면 텍스트 없음" oninput="updateDBlockField('${s.id}','text',this.value)">
+      <div class="field-label">텍스트 색상</div><input type="color" value="${s.textColor||'#333333'}" oninput="updateDBlockField('${s.id}','textColor',this.value)">`;
+  }
+  wrap.innerHTML=inner;
+  container.appendChild(wrap);
+  setTimeout(()=>wrap.querySelectorAll('textarea').forEach(t=>autoResize(t)),10);
+}
+function setDBlockColorMode(id,mode,btn){
+  const s=dBlocks.find(x=>x.id===id); if(!s) return;
+  s.mode=mode;
+  btn.parentElement.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const bWrap=document.getElementById('db-'+id+'-colorB-wrap');
+  if(bWrap) bWrap.style.display=mode==='gradient'?'':'none';
+  renderDPreview();
+}
+function stepDBlock(id,field,delta){
+  const s=dBlocks.find(x=>x.id===id); if(!s) return;
+  const rangeEl=document.getElementById('db-'+id+'-'+field);
+  if(rangeEl){const min=parseFloat(rangeEl.min||'-Infinity'),max=parseFloat(rangeEl.max||'Infinity');s[field]=Math.min(max,Math.max(min,(s[field]||0)+delta));rangeEl.value=s[field];}
+  else{s[field]=(s[field]||0)+delta;}
+  renderDPreview();
+}
+function updateDBlockField(id,field,val){
+  const s=dBlocks.find(x=>x.id===id); if(!s) return;
+  s[field]=val; renderDPreview();
+}
+function loadDBlockImg(input,id){
+  const file=input.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{const s=dBlocks.find(x=>x.id===id);if(!s)return;s.imgSrc=e.target.result;renderDPreview();};
+  reader.readAsDataURL(file);
+}
+function removeDBlock(id){
+  dBlocks=dBlocks.filter(x=>x.id!==id);
+  const edEl=document.getElementById('dbe-'+id); if(edEl) edEl.remove();
+  renderDPreview();
+}
+function renderDPreview(){
+  const container=document.getElementById('previewD'); container.innerHTML='';
+  if(!document.getElementById('dToggle').checked){container.classList.add('hidden');return;}
+  container.classList.remove('hidden');
+  dBlocks.forEach((s,i)=>{
+    const isOnly=dBlocks.length===1,isFirst=i===0,isLast=i===dBlocks.length-1;
+    let radius=isOnly?'8px':isFirst?'8px 8px 0 0':isLast?'0 0 8px 8px':'0';
+    const el=document.createElement('div'); el.className='d-block'; el.style.borderRadius=radius;
+    if(s.type==='song'){
+      el.classList.add('d-block-song');
+      el.innerHTML=`<div class="d-song-top"><div class="d-album"><div class="ph" style="${s.imgSrc?'display:none':''}">커버</div><img src="${s.imgSrc||''}" style="position:absolute;top:50%;left:50%;max-width:none;max-height:none;transform:translate(calc(-50% + ${s.imgX}px),calc(-50% + ${s.imgY}px)) scale(${s.imgS/100}) rotate(${s.imgR}deg);display:${s.imgSrc?'block':'none'}"></div><div class="d-info"><div class="d-title">${s.title}</div><div class="d-artist">${s.artist}</div></div></div>${s.lyrics?`<div class="d-lyrics">${s.lyrics.replace(/\n/g,'<br>')}</div>`:''}`;
+    } else if(s.type==='date'){
+      el.classList.add('d-block-date');
+      el.innerHTML=`<div class="d-date-icon">${s.emoji}</div><div class="d-date-info"><div class="d-date-label">${s.label}</div><div class="d-date-value">${s.date}</div></div>`;
+    } else if(s.type==='color'){
+      el.classList.add('d-block-color'); el.style.height=s.height+'px';
+      el.style.background=s.mode==='gradient'&&s.colorB?`linear-gradient(135deg,${s.colorA},${s.colorB})`:s.colorA;
+      if(s.text) el.innerHTML=`<div class="d-block-color-label" style="color:${s.textColor||'#333333'};mix-blend-mode:normal;opacity:1">${s.text}</div>`;
+    }
+    container.appendChild(el);
+  });
+}
+
+/* ════════════════════════════════
+   데이터 수집 — 전체 포함
+   ════════════════════════════════ */
+function collectData(){
+  /* 1. id 있는 input/textarea/checkbox/range */
+  const data={};
+  document.querySelectorAll('[id]').forEach(el=>{
+    if(el.tagName==='INPUT'&&['text','number','color','range'].includes(el.type)) data[el.id]=el.value;
+    if(el.tagName==='INPUT'&&el.type==='checkbox') data[el.id]=el.checked;
+    if(el.tagName==='TEXTAREA') data[el.id]=el.value;
+  });
+
+  /* 2. 특성치 (id 없는 동적 input) */
+  data['__stats']={
+    b1: collectStats('b1'),
+    b2: collectStats('b2')
+  };
+
+  /* 3. 설명 블록 */
+  data['__descs']={
+    b1: collectDescs('b1'),
+    b2: collectDescs('b2')
+  };
+
+  /* 4. 말풍선 */
+  const msgs=[];
+  document.getElementById('msg-items').querySelectorAll('.msg-item').forEach(item=>{
+    msgs.push({side:item.dataset.side,color:item.querySelector('input[type=color]')?.value,text:item.querySelector('textarea')?.value});
+  });
+  data['__msgs']=msgs;
+
+  /* 5. 타임라인 */
+  const tls=[];
+  document.getElementById('tl-items').querySelectorAll('.tl-item').forEach(item=>{
+    tls.push({side:item.dataset.side,size:item.querySelector('select')?.value,title:item.querySelectorAll('input[type=text]')[0]?.value,content:item.querySelector('textarea')?.value});
+  });
+  data['__tls']=tls;
+
+  /* 6. 이미지 (base64) */
+  data['__imgs']=JSON.parse(JSON.stringify(imgSrcs));
+
+  /* 7. 스티커 */
+  data['__stickers']=stickerList.map(s=>({id:s.id,src:s.src,x:s.x,y:s.y,w:s.w,ratio:s.ratio,rot:s.rot,style:s.style}));
+
+  /* 8. D블록 */
+  data['__dblocks']=JSON.parse(JSON.stringify(dBlocks));
+
+  /* 9. 이미지 칸 비율 */
+  data['__imgRatio']={b1:imgRatio.b1, b2:imgRatio.b2};
+
+  return data;
+}
+
+/* ════════════════════════════════
+   데이터 복원 — 전체 포함
+   ════════════════════════════════ */
+function applyData(data){
+  /* 1. id 있는 필드 */
+  Object.keys(data).forEach(id=>{
+    if(id.startsWith('__')) return;
+    const el=document.getElementById(id); if(!el) return;
+    if(el.type==='checkbox') el.checked=data[id]; else el.value=data[id];
+  });
+
+  /* 2. 이미지 */
+  if(data['__imgs']){
+    const imgs=data['__imgs'];
+    if(imgs.a) applyImgSrc('a',imgs.a);
+    if(imgs.b1) applyImgSrc('b1',imgs.b1);
+    if(imgs.b2) applyImgSrc('b2',imgs.b2);
+    if(imgs.avatarA) applyAvatarSrc('a',imgs.avatarA);
+    if(imgs.avatarB) applyAvatarSrc('b',imgs.avatarB);
+  }
+
+  /* 3. 특성치 복원 */
+  if(data['__stats']){
+    if(data['__stats'].b1) applyStats('b1',data['__stats'].b1);
+    if(data['__stats'].b2) applyStats('b2',data['__stats'].b2);
+  }
+
+  /* 4. 설명 블록 복원 */
+  if(data['__descs']){
+    if(data['__descs'].b1) applyDescs('b1',data['__descs'].b1);
+    if(data['__descs'].b2) applyDescs('b2',data['__descs'].b2);
+  }
+
+  /* 5. 말풍선 */
+  if(data['__msgs']){
+    document.getElementById('msg-items').innerHTML='';
+    data['__msgs'].forEach(m=>{
+      const div=document.createElement('div'); div.className='msg-item'; div.dataset.side=m.side||'left';
+      const isR=m.side==='right';
+      div.innerHTML=`<div class="field-label" style="margin-top:0">캐릭터</div><div class="side-btns"><button${!isR?' class="active"':''} onclick="setMsgSide(this,'left')">A (좌)</button><button${isR?' class="active"':''} onclick="setMsgSide(this,'right')">B (우)</button></div><div class="field-label">글씨 색상</div><input type="color" value="${m.color||'#222'}" oninput="updateChat()"><div class="field-label">내용</div><textarea oninput="updateChat();autoResize(this)">${m.text||''}</textarea><button class="btn-del" style="margin-top:6px" onclick="removeMsgItem(this)">삭제</button>`;
+      document.getElementById('msg-items').appendChild(div);
+      setTimeout(()=>div.querySelectorAll('textarea').forEach(t=>autoResize(t)),10);
+    });
+  }
+
+  /* 6. 타임라인 */
+  if(data['__tls']){
+    document.getElementById('tl-items').innerHTML='';
+    data['__tls'].forEach(tl=>{
+      const div=document.createElement('div'); div.className='tl-item'; div.dataset.side=tl.side||'left';
+      const isR=tl.side==='right',isB=tl.side==='both';
+      div.innerHTML=`<div class="field-label" style="margin-top:0">배치</div><div class="side-btns"><button${(!isR&&!isB)?' class="active"':''} onclick="setSide(this,'left')">A측</button><button${isB?' class="active"':''} onclick="setSide(this,'both')">공용</button><button${isR?' class="active"':''} onclick="setSide(this,'right')">B측</button></div><div class="field-label">중요도</div><select oninput="updateTimeline()"><option value="sm"${tl.size==='sm'?' selected':''}>소</option><option value="md"${tl.size==='md'?' selected':''}>중</option><option value="lg"${tl.size==='lg'?' selected':''}>대</option></select><div class="field-label">제목</div><input type="text" value="${tl.title||''}" oninput="updateTimeline()"><div class="field-label">내용</div><textarea oninput="updateTimeline();autoResize(this)">${tl.content||''}</textarea><button class="btn-del" style="margin-top:6px" onclick="removeTlItem(this)">삭제</button>`;
+      document.getElementById('tl-items').appendChild(div);
+      setTimeout(()=>div.querySelectorAll('textarea').forEach(t=>autoResize(t)),10);
+    });
+  }
+
+  /* 7. 스티커 */
+  if(data['__stickers']){
+    stickerList.forEach(s=>{const el=document.getElementById('sticker-'+s.id);if(el)el.remove();});
+    stickerList=[];
+    data['__stickers'].forEach(s=>{if(!s.src)return;addStickerFromData({...s});});
+    renderStickerPanel();
+  }
+
+  /* 8. D블록 */
+  if(data['__dblocks']){
+    document.getElementById('d-block-items').innerHTML='';
+    dBlocks=[];
+    data['__dblocks'].forEach(s=>{dBlocks.push(s);renderDBlockEditor(s);});
+    renderDPreview();
+  }
+
+  /* 9. 이미지 칸 비율 */
+  if(data['__imgRatio']){
+    ['b1','b2'].forEach(ch=>{
+      const ratio=data['__imgRatio'][ch]||'square';
+      imgRatio[ch]=ratio;
+      document.getElementById(ch+'ImgBox').style.height=IMG_BOX_H[ratio]+'px';
+      document.querySelectorAll(`#char-${ch} .ratio-btn`).forEach(b=>b.classList.remove('active'));
+      const btn=document.getElementById(`${ch}ratio-${ratio}`);
+      if(btn) btn.classList.add('active');
+    });
+  }
+
+  ['b1','b2'].forEach(ch=>updateChar(ch));
+  updateC1(); updateChat(); updateTimeline(); updateTlHeader(); toggleD(); updateBgColor();
+  setTimeout(initAllTextareas,50);
+}
+
+/* ── 임시저장 / 불러오기 ── */
+function saveData(){
+  const data=collectData();
+  try{localStorage.setItem('pairCardSave',JSON.stringify(data));showToast('임시저장 완료!');}
+  catch(e){
+    /* 용량 초과 시 이미지/스티커 src 제거 후 재시도 */
+    const slim=collectData();
+    slim['__imgs']={a:'',b1:'',b2:'',avatarA:'',avatarB:''};
+    slim['__stickers']=stickerList.map(s=>({...s,src:''}));
+    slim['__dblocks']=dBlocks.map(s=>{const c={...s};if(c.imgSrc)c.imgSrc='';return c;});
+    try{localStorage.setItem('pairCardSave',JSON.stringify(slim));showToast('텍스트만 저장됨 — 이미지는 파일 내보내기 사용');}
+    catch(e2){showToast('저장 실패 — 파일 내보내기를 사용하세요');}
+  }
+}
+function loadData(){
+  try{
+    const raw=localStorage.getItem('pairCardSave');
+    if(!raw){showToast('저장된 데이터가 없습니다');return;}
+    applyData(JSON.parse(raw));
+    showToast('불러오기 완료!');
+  }catch(e){showToast('불러오기 실패');}
+}
+
+/* ── 파일 내보내기 / 가져오기 ── */
+function exportToFile(){
+  const data=collectData();
+  const blob=new Blob([JSON.stringify(data)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  const now=new Date();
+  const ts=`${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}`;
+  a.download=`pair_card_${ts}.json`; a.href=url; a.click(); URL.revokeObjectURL(url);
+  showToast('파일로 내보내기 완료!');
+}
+function importFromFile(input){
+  const file=input.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{applyData(JSON.parse(e.target.result));showToast('파일 가져오기 완료!');}
+    catch(err){showToast('파일을 읽을 수 없어요 (잘못된 형식)');}
+    input.value='';
+  };
+  reader.readAsText(file);
+}
+
+/* ── 스티커 ── */
+function buildOutlinedCanvas(src,T,callback){
+  const imgEl=new Image(); imgEl.onload=()=>{
+    const W=imgEl.naturalWidth,H=imgEl.naturalHeight;
+    const off=document.createElement('canvas'); off.width=W; off.height=H;
+    const offCtx=off.getContext('2d'); offCtx.drawImage(imgEl,0,0);
+    const data=offCtx.getImageData(0,0,W,H).data;
+    const out=document.createElement('canvas'); out.width=W; out.height=H;
+    const outCtx=out.getContext('2d'); const outData=outCtx.createImageData(W,H);
+    for(let y=0;y<H;y++){for(let x=0;x<W;x++){const idx=(y*W+x)*4;if(data[idx+3]>10)continue;let edge=false;outer:for(let dy=-T;dy<=T;dy++){for(let dx=-T;dx<=T;dx++){if(dx*dx+dy*dy>T*T)continue;const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=W||ny>=H)continue;if(data[((ny*W+nx)*4)+3]>10){edge=true;break outer;}}}if(edge){outData.data[idx]=255;outData.data[idx+1]=255;outData.data[idx+2]=255;outData.data[idx+3]=255;}}}
+    outCtx.putImageData(outData,0,0); outCtx.drawImage(imgEl,0,0); callback(out.toDataURL());
+  }; imgEl.src=src;
+}
+const STYLES={
+  none:{label:'없음',applyFn:(img,src,cb)=>{img.src=src;img.style.filter='none';if(cb)cb();}},
+  white:{label:'흰 테두리',applyFn:(img,src,cb)=>{buildOutlinedCanvas(src,5,d=>{img.src=d;img.style.filter='none';if(cb)cb();});}},
+  whiteSoft:{label:'흰 글로우',applyFn:(img,src,cb)=>{img.src=src;img.style.filter='drop-shadow(0 0 5px white) drop-shadow(0 0 10px rgba(255,255,255,0.8))';if(cb)cb();}},
+  shadow:{label:'그림자',applyFn:(img,src,cb)=>{img.src=src;img.style.filter='drop-shadow(2px 3px 5px rgba(0,0,0,0.55))';if(cb)cb();}},
+  darkGlow:{label:'검은 글로우',applyFn:(img,src,cb)=>{img.src=src;img.style.filter='drop-shadow(0 0 6px rgba(0,0,0,0.9)) drop-shadow(0 0 14px rgba(0,0,0,0.5))';if(cb)cb();}},
+};
+let stickerList=[],selectedId=null,ctxTargetId=null;
+function addSticker(input){
+  const file=input.files[0]; if(!file) return;
+  const reader=new FileReader(); reader.onload=e=>{
+    const tempImg=new Image(); tempImg.onload=()=>{
+      const id='s'+Date.now(),baseW=100,ratio=tempImg.naturalHeight/tempImg.naturalWidth;
+      const s={id,src:e.target.result,x:160,y:80,w:baseW,ratio,rot:0,style:'none'};
+      stickerList.push(s); renderStickerEl(s); renderStickerPanel(); input.value='';
+    }; tempImg.src=e.target.result;
+  }; reader.readAsDataURL(file);
+}
+function addStickerFromData(s){stickerList.push(s);renderStickerEl(s);}
+function getH(s){return Math.round(s.w*s.ratio);}
+function renderStickerEl(s){
+  const layer=document.getElementById('stickerLayer');
+  const wrap=document.createElement('div'); wrap.id='sticker-'+s.id; wrap.className='sticker-el';
+  wrap.style.cssText=`left:${s.x}px;top:${s.y}px;transform:rotate(${s.rot}deg);width:${s.w}px;height:${getH(s)}px`;
+  const img=document.createElement('img'); img.style.cssText=`width:${s.w}px;height:${getH(s)}px;display:block;filter:none`;
+  const selBox=document.createElement('div'); selBox.className='sticker-sel-box';
+  const hBR=document.createElement('div'); hBR.className='sticker-handle br'; hBR.style.cssText='bottom:-6px;right:-6px;position:absolute;display:none';
+  const hROT=document.createElement('div'); hROT.className='sticker-handle rot'; hROT.style.cssText='top:-24px;left:50%;transform:translateX(-50%);position:absolute;display:none';
+  wrap.append(img,selBox,hBR,hROT);
+  function syncSize(){const h=getH(s);wrap.style.width=s.w+'px';wrap.style.height=h+'px';img.style.width=s.w+'px';img.style.height=h+'px';selBox.style.width=s.w+'px';selBox.style.height=h+'px';}
+  STYLES[s.style].applyFn(img,s.src,null); syncSize();
+  let dragging=false,dSX,dSY,dSL,dST;
+  wrap.addEventListener('mousedown',e=>{if(e.target===hBR||e.target===hROT)return;if(e.button!==0)return;selectSticker(s.id);dragging=true;dSX=e.clientX;dSY=e.clientY;dSL=s.x;dST=s.y;e.preventDefault();});
+  let resizing=false,rSX,rSW; hBR.addEventListener('mousedown',e=>{resizing=true;rSX=e.clientX;rSW=s.w;e.preventDefault();e.stopPropagation();});
+  let rotating=false; hROT.addEventListener('mousedown',e=>{rotating=true;e.preventDefault();e.stopPropagation();});
+  document.addEventListener('mousemove',e=>{
+    if(dragging){s.x=dSL+(e.clientX-dSX);s.y=dST+(e.clientY-dSY);wrap.style.left=s.x+'px';wrap.style.top=s.y+'px';}
+    if(resizing){s.w=Math.max(20,rSW+(e.clientX-rSX));syncSize();}
+    if(rotating){const rect=wrap.getBoundingClientRect();const cx=rect.left+rect.width/2,cy=rect.top+rect.height/2;s.rot=Math.round(Math.atan2(e.clientY-cy,e.clientX-cx)*(180/Math.PI)+90);wrap.style.transform=`rotate(${s.rot}deg)`;}
+  });
+  document.addEventListener('mouseup',()=>{dragging=false;resizing=false;rotating=false;});
+  wrap.addEventListener('contextmenu',e=>{e.preventDefault();e.stopPropagation();selectSticker(s.id);ctxTargetId=s.id;showCtxMenu(e.clientX,e.clientY,s.style);});
+  wrap.addEventListener('click',e=>{selectSticker(s.id);e.stopPropagation();});
+  layer.appendChild(wrap);
+}
+function selectSticker(id){selectedId=id;document.querySelectorAll('.sticker-el').forEach(wrap=>{const on=wrap.id==='sticker-'+id;wrap.querySelector('.sticker-sel-box').style.display=on?'block':'none';wrap.querySelectorAll('.sticker-handle').forEach(h=>h.style.display=on?'block':'none');});}
+function deselectAll(){selectedId=null;document.querySelectorAll('.sticker-el').forEach(wrap=>{wrap.querySelector('.sticker-sel-box').style.display='none';wrap.querySelectorAll('.sticker-handle').forEach(h=>h.style.display='none');});hideCtxMenu();}
+const ctxMenu=document.getElementById('ctxMenu');
+function showCtxMenu(x,y,cur){ctxMenu.style.left=x+'px';ctxMenu.style.top=y+'px';ctxMenu.classList.add('show');ctxMenu.querySelectorAll('.ctx-menu-item[data-style]').forEach(item=>item.classList.toggle('active',item.dataset.style===cur));}
+function hideCtxMenu(){ctxMenu.classList.remove('show');}
+ctxMenu.querySelectorAll('.ctx-menu-item[data-style]').forEach(item=>{item.addEventListener('click',()=>{if(!ctxTargetId)return;const s=stickerList.find(x=>x.id===ctxTargetId);if(!s)return;s.style=item.dataset.style;const wrap=document.getElementById('sticker-'+s.id);if(!wrap)return;STYLES[s.style].applyFn(wrap.querySelector('img'),s.src,null);hideCtxMenu();renderStickerPanel();});});
+document.getElementById('ctxDelete').addEventListener('click',()=>{if(ctxTargetId){removeSticker(ctxTargetId);hideCtxMenu();}});
+document.getElementById('canvasContainer').addEventListener('click',e=>{if(!e.target.closest('.sticker-el'))deselectAll();});
+document.addEventListener('click',e=>{if(!e.target.closest('.ctx-menu')&&!e.target.closest('.sticker-el'))hideCtxMenu();});
+document.addEventListener('contextmenu',e=>{if(!e.target.closest('.sticker-el'))hideCtxMenu();});
+function renderStickerPanel(){
+  const list=document.getElementById('sticker-list');
+  document.getElementById('no-sticker').style.display=stickerList.length?'none':'block';
+  list.innerHTML='';
+  stickerList.forEach(s=>{const item=document.createElement('div');item.className='sticker-item';item.innerHTML=`<div style="display:flex;align-items:center;gap:8px"><img src="${s.src}" style="width:32px;height:auto;object-fit:contain;border-radius:4px;flex-shrink:0;border:1px solid #e0e0e0"><span style="font-size:11px;color:var(--color-text-secondary);flex:1">우클릭: 효과 선택</span><button class="btn-del" onclick="removeSticker('${s.id}')">삭제</button></div>`;list.appendChild(item);});
+}
+function removeSticker(id){stickerList=stickerList.filter(s=>s.id!==id);const el=document.getElementById('sticker-'+id);if(el)el.remove();if(selectedId===id)selectedId=null;renderStickerPanel();}
+
+function saveImage(){
+  deselectAll();
+  if(!window.html2canvas){showToast('잠시 후 다시 시도해주세요');return;}
+  const bg=document.getElementById('bgColor').value;
+  showToast('이미지 생성 중...');
+  const canvasEl=document.getElementById('mainCanvas'),canvasRect=canvasEl.getBoundingClientRect();
+  let extraTop=0,extraLeft=0,extraBottom=0,extraRight=0;
+  stickerList.forEach(s=>{const el=document.getElementById('sticker-'+s.id);if(!el)return;const r=el.getBoundingClientRect();extraTop=Math.max(extraTop,canvasRect.top-r.top);extraLeft=Math.max(extraLeft,canvasRect.left-r.left);extraBottom=Math.max(extraBottom,r.bottom-canvasRect.bottom);extraRight=Math.max(extraRight,r.right-canvasRect.right);});
+  extraTop=Math.max(0,Math.ceil(extraTop));extraLeft=Math.max(0,Math.ceil(extraLeft));extraBottom=Math.max(0,Math.ceil(extraBottom));extraRight=Math.max(0,Math.ceil(extraRight));
+  html2canvas(document.getElementById('canvasContainer'),{backgroundColor:bg,scale:2,useCORS:true,allowTaint:true,scrollX:0,scrollY:0,x:-extraLeft,y:-extraTop,width:canvasRect.width+extraLeft+extraRight,height:canvasRect.height+extraTop+extraBottom}).then(c=>{
+    const mH=40,mLR=100,out=document.createElement('canvas');
+    out.width=c.width+mLR*2;out.height=c.height+mH*2;
+    const ctx=out.getContext('2d');ctx.fillStyle=bg;ctx.fillRect(0,0,out.width,out.height);ctx.drawImage(c,mLR,mH);
+    const a=document.createElement('a');a.download='pair_card.png';a.href=out.toDataURL('image/png');a.click();
+    showToast('저장 완료!');
+  }).catch(()=>showToast('저장 실패'));
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  const s1=[{name:'힘',val:70},{name:'지능',val:60},{name:'민첩',val:85},{name:'카리스마',val:50},{name:'체력',val:90}];
+  const s2=[{name:'힘',val:40},{name:'지능',val:90},{name:'민첩',val:55},{name:'카리스마',val:80},{name:'체력',val:60}];
+  drawRadar('radar1',s1,'#4488ff');drawRadar('radar2',s2,'#ff4466');
+  document.getElementById('b1statsList').innerHTML=s1.map(s=>`<div class="stat-line"><span>${s.name}</span><span class="stat-val" style="color:#4488ff">${s.val}</span></div>`).join('');
+  document.getElementById('b2statsList').innerHTML=s2.map(s=>`<div class="stat-line"><span>${s.name}</span><span class="stat-val" style="color:#ff4466">${s.val}</span></div>`).join('');
+  updateChar('b1'); updateChar('b2');
+  updateC1(); updateChat(); updateTimeline(); initAllTextareas();
+  addDBlock('song');
+});
+</script>
