@@ -1037,68 +1037,95 @@ function saveImage(){
   deselectAll();
   if(!window.html2canvas){showToast('잠시 후 다시 시도해주세요');return;}
   const bg=document.getElementById('bgColor').value;
+  const SCALE=2, PAD_H=40, PAD_LR=100;
   showToast('이미지 생성 중...');
 
-  /* preview 스크롤을 0으로 리셋 (복원은 캡처 후) */
-  const previewEl=document.getElementById('previewArea');
-  const savedST=previewEl.scrollTop, savedSL=previewEl.scrollLeft;
-  previewEl.scrollTop=0;
-  previewEl.scrollLeft=0;
+  const mainCanvas=document.getElementById('mainCanvas');
+  const cW=mainCanvas.offsetWidth;
+  const cH=mainCanvas.offsetHeight;
 
+  /* mainCanvas를 body에 임시 clone — 페이지 (0,0) 위치에서 캡처해야 y오프셋 없음 */
+  const clone=mainCanvas.cloneNode(true);
+  clone.style.cssText=`
+    position:fixed; top:0; left:0; z-index:-9999;
+    width:${cW}px; height:${cH}px; pointer-events:none;
+    visibility:hidden;
+  `;
+  /* 스티커 레이어는 clone에 포함시키지 않음 — 스티커는 Canvas API로 직접 그림 */
+  document.body.appendChild(clone);
+
+  /* clone이 DOM에 반영된 뒤 캡처 */
   requestAnimationFrame(()=>{
-    const container=document.getElementById('canvasContainer');
-
-    /* 페이지 전체 기준 canvasContainer의 절대 좌표 계산
-       (getBoundingClientRect + 페이지 스크롤 보정) */
-    const rect=container.getBoundingClientRect();
-    const pageX=rect.left+window.pageXOffset;
-    const pageY=rect.top +window.pageYOffset;
-    const cW=rect.width;
-    const cH=rect.height;
-
-    /* 스티커가 canvasContainer 밖으로 나간 양 (CSS 위치값 기반) */
-    let eTop=0,eLeft=0,eBottom=0,eRight=0;
-    stickerList.forEach(s=>{
-      const el=document.getElementById('sticker-'+s.id); if(!el) return;
-      const l=parseFloat(el.style.left)||0;
-      const t=parseFloat(el.style.top) ||0;
-      const w=el.offsetWidth, h=el.offsetHeight;
-      eLeft  =Math.max(eLeft,   -l);
-      eTop   =Math.max(eTop,    -t);
-      eRight =Math.max(eRight,  (l+w)-cW);
-      eBottom=Math.max(eBottom, (t+h)-cH);
-    });
-    eTop   =Math.max(0,Math.ceil(eTop));
-    eLeft  =Math.max(0,Math.ceil(eLeft));
-    eBottom=Math.max(0,Math.ceil(eBottom));
-    eRight =Math.max(0,Math.ceil(eRight));
-
-    const captureW=cW+eLeft+eRight;
-    const captureH=cH+eTop +eBottom;
-
-    /* document(body) 전체를 캡처한 뒤 canvasContainer 해당 영역만 잘라냄
-       → html2canvas의 요소 기준 오프셋 버그를 완전히 우회 */
-    html2canvas(document.documentElement,{
-      backgroundColor:bg, scale:2, useCORS:true, allowTaint:true,
+    clone.style.visibility='visible';
+    html2canvas(clone,{
+      backgroundColor:bg, scale:SCALE,
+      useCORS:true, allowTaint:true,
       scrollX:0, scrollY:0,
-      x: pageX-eLeft,
-      y: pageY-eTop,
-      width:  captureW,
-      height: captureH,
-      windowWidth:  document.documentElement.scrollWidth,
-      windowHeight: document.documentElement.scrollHeight,
-    }).then(c=>{
-      previewEl.scrollTop=savedST; previewEl.scrollLeft=savedSL;
-      const mH=40,mLR=100,out=document.createElement('canvas');
-      out.width=c.width+mLR*2; out.height=c.height+mH*2;
+      x:0, y:0,
+      width:cW, height:cH
+    }).then(baseCanvas=>{
+      document.body.removeChild(clone);
+
+      /* 스티커가 캔버스 밖으로 나간 양 계산 (CSS left/top 기준) */
+      let eT=0,eL=0,eB=0,eR=0;
+      stickerList.forEach(s=>{
+        const el=document.getElementById('sticker-'+s.id); if(!el) return;
+        const l=parseFloat(el.style.left)||0;
+        const t=parseFloat(el.style.top) ||0;
+        const w=el.offsetWidth, h=el.offsetHeight;
+        eL=Math.max(eL,-l);   eT=Math.max(eT,-t);
+        eR=Math.max(eR,(l+w)-cW); eB=Math.max(eB,(t+h)-cH);
+      });
+      eT=Math.max(0,Math.ceil(eT)); eL=Math.max(0,Math.ceil(eL));
+      eB=Math.max(0,Math.ceil(eB)); eR=Math.max(0,Math.ceil(eR));
+
+      /* 최종 캔버스 */
+      const totalW=(cW+eL+eR)*SCALE+PAD_LR*2;
+      const totalH=(cH+eT+eB)*SCALE+PAD_H*2;
+      const out=document.createElement('canvas');
+      out.width=totalW; out.height=totalH;
       const ctx=out.getContext('2d');
-      ctx.fillStyle=bg; ctx.fillRect(0,0,out.width,out.height);
-      ctx.drawImage(c,mLR,mH);
-      const a=document.createElement('a');
-      a.download='pair_card.png'; a.href=out.toDataURL('image/png'); a.click();
-      showToast('저장 완료!');
+      ctx.fillStyle=bg; ctx.fillRect(0,0,totalW,totalH);
+      /* baseCanvas: 스티커 확장 오프셋만큼 밀어서 배치 */
+      ctx.drawImage(baseCanvas, PAD_LR+eL*SCALE, PAD_H+eT*SCALE);
+
+      /* 스티커를 Canvas API로 직접 합성 */
+      const drawNext=(idx)=>{
+        if(idx>=stickerList.length){
+          const a=document.createElement('a');
+          a.download='pair_card.png'; a.href=out.toDataURL('image/png'); a.click();
+          showToast('저장 완료!');
+          return;
+        }
+        const s=stickerList[idx];
+        const el=document.getElementById('sticker-'+s.id);
+        const imgEl=el?el.querySelector('img'):null;
+        if(!imgEl||!imgEl.src){drawNext(idx+1);return;}
+        const l=parseFloat(el.style.left)||0;
+        const t=parseFloat(el.style.top) ||0;
+        const w=el.offsetWidth, h=el.offsetHeight;
+        const img=new Image();
+        img.crossOrigin='anonymous';
+        img.onload=()=>{
+          const dx=PAD_LR+(eL+l)*SCALE;
+          const dy=PAD_H +(eT+t)*SCALE;
+          const dw=w*SCALE, dh=h*SCALE;
+          ctx.save();
+          ctx.translate(dx+dw/2, dy+dh/2);
+          ctx.rotate(s.rot*Math.PI/180);
+          const fm={whiteSoft:'drop-shadow(0 0 5px white) drop-shadow(0 0 10px rgba(255,255,255,0.8))',shadow:'drop-shadow(2px 3px 5px rgba(0,0,0,0.55))',darkGlow:'drop-shadow(0 0 6px rgba(0,0,0,0.9))'};
+          if(fm[s.style]) ctx.filter=fm[s.style];
+          ctx.drawImage(img,-dw/2,-dh/2,dw,dh);
+          ctx.restore();
+          drawNext(idx+1);
+        };
+        img.onerror=()=>drawNext(idx+1);
+        img.src=imgEl.src;
+      };
+      drawNext(0);
+
     }).catch(()=>{
-      previewEl.scrollTop=savedST; previewEl.scrollLeft=savedSL;
+      try{document.body.removeChild(clone);}catch(e){}
       showToast('저장 실패');
     });
   });
