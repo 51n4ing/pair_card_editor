@@ -167,7 +167,7 @@ input[type=color]{width:100%;height:30px;padding:2px;border:1px solid #d0d0d0;bo
 .tl-body{font-size:9px;color:#888;line-height:1.4;margin-top:2px}
 </style>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
-<title>페어 카드 에디터</title>
+<title>🤍페어 카드 에디터</title>
 <div class="toast" id="toast"></div>
 <div class="ctx-menu" id="ctxMenu">
   <div class="ctx-menu-title">꾸밈 효과</div>
@@ -1039,47 +1039,56 @@ function saveImage(){
   const bg=document.getElementById('bgColor').value;
   showToast('이미지 생성 중...');
 
-  /* preview 영역 스크롤을 캡처 전에 (0,0)으로 리셋하고 캡처 후 복원 */
+  /* preview 스크롤을 0으로 리셋 (복원은 캡처 후) */
   const previewEl=document.getElementById('previewArea');
-  const savedScrollTop=previewEl.scrollTop;
-  const savedScrollLeft=previewEl.scrollLeft;
+  const savedST=previewEl.scrollTop, savedSL=previewEl.scrollLeft;
   previewEl.scrollTop=0;
   previewEl.scrollLeft=0;
 
-  /* 스티커가 canvasContainer 밖으로 나간 양을 CSS 위치값으로 계산
-     (getBoundingClientRect 미사용 → 스크롤/환경 독립적) */
-  const container=document.getElementById('canvasContainer');
-  const containerW=container.offsetWidth;
-  const containerH=container.offsetHeight;
-
-  let extraTop=0,extraLeft=0,extraBottom=0,extraRight=0;
-  stickerList.forEach(s=>{
-    const el=document.getElementById('sticker-'+s.id); if(!el) return;
-    const left=parseFloat(el.style.left)||0;
-    const top =parseFloat(el.style.top) ||0;
-    const w=el.offsetWidth, h=el.offsetHeight;
-    extraLeft  =Math.max(extraLeft,   -left);
-    extraTop   =Math.max(extraTop,    -top);
-    extraRight =Math.max(extraRight,  (left+w)-containerW);
-    extraBottom=Math.max(extraBottom, (top +h)-containerH);
-  });
-  extraTop   =Math.max(0,Math.ceil(extraTop));
-  extraLeft  =Math.max(0,Math.ceil(extraLeft));
-  extraBottom=Math.max(0,Math.ceil(extraBottom));
-  extraRight =Math.max(0,Math.ceil(extraRight));
-
-  /* requestAnimationFrame으로 스크롤 리셋이 DOM에 반영된 뒤 캡처 */
   requestAnimationFrame(()=>{
-    html2canvas(container,{
+    const container=document.getElementById('canvasContainer');
+
+    /* 페이지 전체 기준 canvasContainer의 절대 좌표 계산
+       (getBoundingClientRect + 페이지 스크롤 보정) */
+    const rect=container.getBoundingClientRect();
+    const pageX=rect.left+window.pageXOffset;
+    const pageY=rect.top +window.pageYOffset;
+    const cW=rect.width;
+    const cH=rect.height;
+
+    /* 스티커가 canvasContainer 밖으로 나간 양 (CSS 위치값 기반) */
+    let eTop=0,eLeft=0,eBottom=0,eRight=0;
+    stickerList.forEach(s=>{
+      const el=document.getElementById('sticker-'+s.id); if(!el) return;
+      const l=parseFloat(el.style.left)||0;
+      const t=parseFloat(el.style.top) ||0;
+      const w=el.offsetWidth, h=el.offsetHeight;
+      eLeft  =Math.max(eLeft,   -l);
+      eTop   =Math.max(eTop,    -t);
+      eRight =Math.max(eRight,  (l+w)-cW);
+      eBottom=Math.max(eBottom, (t+h)-cH);
+    });
+    eTop   =Math.max(0,Math.ceil(eTop));
+    eLeft  =Math.max(0,Math.ceil(eLeft));
+    eBottom=Math.max(0,Math.ceil(eBottom));
+    eRight =Math.max(0,Math.ceil(eRight));
+
+    const captureW=cW+eLeft+eRight;
+    const captureH=cH+eTop +eBottom;
+
+    /* document(body) 전체를 캡처한 뒤 canvasContainer 해당 영역만 잘라냄
+       → html2canvas의 요소 기준 오프셋 버그를 완전히 우회 */
+    html2canvas(document.documentElement,{
       backgroundColor:bg, scale:2, useCORS:true, allowTaint:true,
       scrollX:0, scrollY:0,
-      x:-extraLeft, y:-extraTop,
-      width :containerW+extraLeft+extraRight,
-      height:containerH+extraTop +extraBottom
+      x: pageX-eLeft,
+      y: pageY-eTop,
+      width:  captureW,
+      height: captureH,
+      windowWidth:  document.documentElement.scrollWidth,
+      windowHeight: document.documentElement.scrollHeight,
     }).then(c=>{
-      /* 스크롤 복원 */
-      previewEl.scrollTop=savedScrollTop;
-      previewEl.scrollLeft=savedScrollLeft;
+      previewEl.scrollTop=savedST; previewEl.scrollLeft=savedSL;
       const mH=40,mLR=100,out=document.createElement('canvas');
       out.width=c.width+mLR*2; out.height=c.height+mH*2;
       const ctx=out.getContext('2d');
@@ -1089,8 +1098,7 @@ function saveImage(){
       a.download='pair_card.png'; a.href=out.toDataURL('image/png'); a.click();
       showToast('저장 완료!');
     }).catch(()=>{
-      previewEl.scrollTop=savedScrollTop;
-      previewEl.scrollLeft=savedScrollLeft;
+      previewEl.scrollTop=savedST; previewEl.scrollLeft=savedSL;
       showToast('저장 실패');
     });
   });
